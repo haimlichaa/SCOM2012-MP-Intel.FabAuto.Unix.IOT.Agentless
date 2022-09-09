@@ -1,0 +1,706 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ManagementPack SchemaVersion="2.0" ContentReadable="true" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Manifest>
+    <Identity>
+      <ID>Intel.FabAuto.Unix.Agentless</ID>
+      <Version>3.0.0.0</Version>
+    </Identity>
+    <Name>Unix.IOT.Agentless</Name>
+    <References>
+      <Reference Alias="SC">
+        <ID>Microsoft.SystemCenter.Library</ID>
+        <Version>7.0.8432.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Unix">
+        <ID>Microsoft.Unix.Library</ID>
+        <Version>7.6.1092.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Health">
+        <ID>System.Health.Library</ID>
+        <Version>7.0.8432.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="System">
+        <ID>System.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+    </References>
+  </Manifest>
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        <ClassType ID="Intel.FabAuto.Unix.Agentless.IOT.Computer" Accessibility="Public" Abstract="false" Base="System!System.LogicalHardware" Hosted="false" Singleton="false">
+          <Property ID="PrincipalName" Type="string" AutoIncrement="false" Key="true" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="DNSName" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="IPAddress" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="NetworkName" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="SSHPort" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="Architecture" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="TimeZoneOffset" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="LogicalProcessors" Type="int" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="PhysicalProcessors" Type="int" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+        </ClassType>
+      </ClassTypes>
+    </EntityTypes>
+    <SecureReferences>
+      <SecureReference ID="Intel.FabAuto.IoT.Agentless.ActionAccount" Accessibility="Public" Context="System!System.Entity" />
+    </SecureReferences>
+    <ModuleTypes>
+      <DataSourceModuleType ID="Intel.FabAuto.Unix.Agentless.Server.TimedSSHCommand.PropertyBag.DataSource" Accessibility="Public" Batching="false">
+        <Configuration>
+          <IncludeSchemaTypes>
+            <SchemaType>System!System.ExpressionEvaluatorSchema</SchemaType>
+          </IncludeSchemaTypes>
+          <xsd:element name="Interval" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TargetSystem" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SSHCommand" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Port" type="xsd:integer" default="22" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Timeout" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="UserName" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Password" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="PSScriptName" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="PSScriptBody" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="PSArguments" type="xsd:string" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="FilterExpression" type="ExpressionType" maxOccurs="1" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="Interval" Selector="$Config/Interval$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="Timeout" Selector="$Config/Timeout$" ParameterType="int" />
+        </OverrideableParameters>
+        <ModuleImplementation Isolation="Any">
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Scheduler" TypeID="System!System.Scheduler">
+                <Scheduler>
+                  <SimpleReccuringSchedule>
+                    <Interval>$Config/Interval$</Interval>
+                    <SyncTime>$Config/SyncTime$</SyncTime>
+                  </SimpleReccuringSchedule>
+                  <ExcludeDates />
+                </Scheduler>
+              </DataSource>
+              <ProbeAction ID="InvokeProbe" TypeID="Intel.FabAuto.Unix.Agentless.SSHCommand.PropertyBag.ProbeAction">
+                <TargetSystem>$Config/TargetSystem$</TargetSystem>
+                <SSHCommand>$Config/SSHCommand$</SSHCommand>
+                <Port>$Config/Port$</Port>
+                <Timeout>$Config/Timeout$</Timeout>
+                <UserName>$Config/UserName$</UserName>
+                <Password>$Config/Password$</Password>
+                <PSScriptName>$Config/PSScriptName$</PSScriptName>
+                <PSScriptBody>$Config/PSScriptBody$</PSScriptBody>
+                <PSArguments>$Config/PSArguments$</PSArguments>
+              </ProbeAction>
+              <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
+                <Expression>$Config/FilterExpression$</Expression>
+              </ConditionDetection>
+            </MemberModules>
+            <Composition>
+              <Node ID="Filter">
+                <Node ID="InvokeProbe">
+                  <Node ID="Scheduler" />
+                </Node>
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+      </DataSourceModuleType>
+      <DataSourceModuleType ID="Intel.FabAuto.Unix.Agentless.Server.TimedSSHCommand.DataSource" Accessibility="Public" Batching="false">
+        <Configuration>
+          <IncludeSchemaTypes>
+            <SchemaType>System!System.ExpressionEvaluatorSchema</SchemaType>
+          </IncludeSchemaTypes>
+          <xsd:element name="Interval" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TargetSystem" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SSHCommand" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Port" type="xsd:integer" default="22" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Timeout" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="UserName" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Password" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="FilterExpression" type="ExpressionType" maxOccurs="1" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="Interval" Selector="$Config/Interval$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="Timeout" Selector="$Config/Timeout$" ParameterType="int" />
+        </OverrideableParameters>
+        <ModuleImplementation Isolation="Any">
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Scheduler" TypeID="System!System.Scheduler">
+                <Scheduler>
+                  <SimpleReccuringSchedule>
+                    <Interval>$Config/Interval$</Interval>
+                    <SyncTime>$Config/SyncTime$</SyncTime>
+                  </SimpleReccuringSchedule>
+                  <ExcludeDates />
+                </Scheduler>
+              </DataSource>
+              <ProbeAction ID="InvokeProbe" TypeID="Unix!Microsoft.Unix.SSHCommand.ProbeAction">
+                <Host>$Config/TargetSystem$</Host>
+                <Port>$Config/Port$</Port>
+                <UserName>$Config/UserName$</UserName>
+                <Password>$Config/Password$</Password>
+                <Command>$Config/SSHCommand$</Command>
+                <TimeoutSeconds>$Config/Timeout$</TimeoutSeconds>
+              </ProbeAction>
+              <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
+                <Expression>$Config/FilterExpression$</Expression>
+              </ConditionDetection>
+            </MemberModules>
+            <Composition>
+              <Node ID="Filter">
+                <Node ID="InvokeProbe">
+                  <Node ID="Scheduler" />
+                </Node>
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.BaseData</OutputType>
+      </DataSourceModuleType>
+      <DataSourceModuleType ID="Intel.FabAuto.Agentless.TimedSshCommand.Discovery.DataSource" Accessibility="Public" Batching="false">
+        <Configuration>
+          <IncludeSchemaTypes>
+            <SchemaType>System!System.Discovery.MapperSchema</SchemaType>
+            <SchemaType>System!System.ExpressionEvaluatorSchema</SchemaType>
+          </IncludeSchemaTypes>
+          <xsd:element name="Interval" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TargetSystem" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ShellCommand" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Port" type="xsd:integer" default="22" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Timeout" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="UserName" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Password" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="FilterExpression" type="ExpressionType" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ClassId" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="InstanceSettings" type="SettingsType" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="Interval" Selector="$Config/Interval$" ParameterType="int" />
+          <OverrideableParameter ID="Timeout" Selector="$Config/Timeout$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="Port" Selector="$Config/Timeout$" ParameterType="int" />
+        </OverrideableParameters>
+        <ModuleImplementation Isolation="Any">
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Scheduler" TypeID="System!System.Discovery.Scheduler">
+                <Scheduler>
+                  <SimpleReccuringSchedule>
+                    <Interval>$Config/Interval$</Interval>
+                    <SyncTime>$Config/SyncTime$</SyncTime>
+                  </SimpleReccuringSchedule>
+                  <ExcludeDates />
+                </Scheduler>
+              </DataSource>
+              <ProbeAction ID="DS" TypeID="Unix!Microsoft.Unix.SSHCommand.ProbeAction">
+                <Host>$Config/TargetSystem$</Host>
+                <Port>$Config/Port$</Port>
+                <UserName>$Config/UserName$</UserName>
+                <Password>$Config/Password$</Password>
+                <Command>$Config/ShellCommand$</Command>
+                <TimeoutSeconds>$Config/Timeout$</TimeoutSeconds>
+              </ProbeAction>
+              <ConditionDetection ID="Filter" TypeID="System!System.ExpressionFilter">
+                <Expression>$Config/FilterExpression$</Expression>
+              </ConditionDetection>
+              <ConditionDetection ID="Mapper" TypeID="System!System.Discovery.ClassSnapshotDataMapper">
+                <ClassId>$Config/ClassId$</ClassId>
+                <InstanceSettings>$Config/InstanceSettings$</InstanceSettings>
+              </ConditionDetection>
+            </MemberModules>
+            <Composition>
+              <Node ID="Mapper">
+                <Node ID="Filter">
+                  <Node ID="DS">
+                    <Node ID="Scheduler" />
+                  </Node>
+                </Node>
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.Discovery.Data</OutputType>
+      </DataSourceModuleType>
+      <ProbeActionModuleType ID="Intel.FabAuto.Unix.Agentless.SSHCommand.PropertyBag.ProbeAction" Accessibility="Public" Batching="false" PassThrough="false">
+        <Configuration>
+          <xsd:element name="TargetSystem" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SSHCommand" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Port" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Timeout" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="UserName" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Password" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="PSScriptName" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="PSScriptBody" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="PSArguments" type="xsd:string" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <ModuleImplementation Isolation="Any">
+          <Composite>
+            <MemberModules>
+              <ProbeAction ID="InvokeProbe" TypeID="Unix!Microsoft.Unix.SSHCommand.ProbeAction">
+                <Host>$Config/TargetSystem$</Host>
+                <Port>$Config/Port$</Port>
+                <UserName>$Config/UserName$</UserName>
+                <Password>$Config/Password$</Password>
+                <Command>$Config/SSHCommand$</Command>
+                <TimeoutSeconds>$Config/Timeout$</TimeoutSeconds>
+              </ProbeAction>
+              <ProbeAction ID="PSProbe" TypeID="System!System.CommandExecuterProbePropertyBagBase">
+                <ApplicationName>%windir%\system32\windowspowershell\v1.0\powershell.exe</ApplicationName>
+                <WorkingDirectory></WorkingDirectory>
+                <CommandLine>". '$file/$Config/PSScriptName$$' $Config/PSArguments$ "</CommandLine>
+                <TimeoutSeconds>$Config/Timeout$</TimeoutSeconds>
+                <RequireOutput>true</RequireOutput>
+                <Files>
+                  <File>
+                    <Name>$Config/PSScriptName$</Name>
+                    <Contents>$Config/PSScriptBody$</Contents>
+                  </File>
+                </Files>
+                <OutputType>System.PropertyBagData</OutputType>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="PSProbe">
+                <Node ID="InvokeProbe" />
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </ProbeActionModuleType>
+    </ModuleTypes>
+    <MonitorTypes>
+      <UnitMonitorType ID="Intel.FabAuto.Unix.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" Accessibility="Public">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="StatusOK" NoDetection="false" />
+          <MonitorTypeState ID="StatusError" NoDetection="false" />
+        </MonitorTypeStates>
+        <Configuration>
+          <IncludeSchemaTypes>
+            <SchemaType>System!System.ExpressionEvaluatorSchema</SchemaType>
+          </IncludeSchemaTypes>
+          <xsd:element name="Interval" type="xsd:unsignedInt" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TargetSystem" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SSHCommand" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Port" type="xsd:integer" default="22" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Timeout" type="xsd:unsignedInt" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="UserName" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Password" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="FilterExpression" type="ExpressionType" maxOccurs="1" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ErrorExpression" type="ExpressionType" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SuccessExpression" type="ExpressionType" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="Interval" Selector="$Config/Interval$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="Timeout" Selector="$Config/Timeout$" ParameterType="int" />
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="InvokeDS" TypeID="Intel.FabAuto.Unix.Agentless.Server.TimedSSHCommand.DataSource">
+              <Interval>$Config/Interval$</Interval>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+              <TargetSystem>$Config/TargetSystem$</TargetSystem>
+              <SSHCommand>$Config/SSHCommand$</SSHCommand>
+              <Port>$Config/Port$</Port>
+              <Timeout>$Config/Timeout$</Timeout>
+              <UserName>$Config/UserName$</UserName>
+              <Password>$Config/Password$</Password>
+              <FilterExpression>$Config/FilterExpression$</FilterExpression>
+            </DataSource>
+            <ConditionDetection ID="CDStatusOK" TypeID="System!System.ExpressionFilter">
+              <Expression>$Config/SuccessExpression$</Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="CDStatusError" TypeID="System!System.ExpressionFilter">
+              <Expression>$Config/ErrorExpression$</Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="StatusOK">
+              <Node ID="CDStatusOK">
+                <Node ID="InvokeDS" />
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="StatusError">
+              <Node ID="CDStatusError">
+                <Node ID="InvokeDS" />
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+    </MonitorTypes>
+  </TypeDefinitions>
+  <Monitoring>
+    <Discoveries>
+      <Discovery ID="Intel.FabAuto.Unix.Agentless.IOT.Computer.Discovery" Target="SC!Microsoft.SystemCenter.RootManagementServer" Enabled="true" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="Intel.FabAuto.Unix.Agentless.IOT.Computer"></DiscoveryClass>
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="System!System.CommandExecuterDiscoveryDataSource">
+          <IntervalSeconds>7200</IntervalSeconds>
+          <ApplicationName>%windir%\system32\windowspowershell\v1.0\powershell.exe</ApplicationName>
+          <WorkingDirectory>C:\</WorkingDirectory>
+          <CommandLine>". '$file/Intel.FabAuto.Unix.Agentless.IOT.Computer.Discovery.ps1$' '$MPElement$' '$Target/Id$'"</CommandLine>
+          <TimeoutSeconds>300</TimeoutSeconds>
+          <RequireOutput>true</RequireOutput>
+          <Files>
+            <File>
+              <Name>Intel.FabAuto.Unix.Agentless.IOT.Computer.Discovery.ps1</Name>
+              <Contents>
+                
+#*********************************************************************
+#   Purpose: Discovers  Agentless Unix Servers
+#       01/07/2016 - Haim Lichaa  - Initial
+##  Parameters: SourceId, ManagementenityId
+#  
+#   Example usage: Powershell .\Script.ps1 "{5D6F1419-6E0A-7033-9A01-E3FB295E946D}" "{D00A3B46-A323-E88C-5B57-94D188A7C320}" 
+#*********************************************************************
+param($sourceId,$managedEntityId)
+$VERSION="1.0"
+
+
+#==================================================================================
+# Sub:		LogWrite
+# Purpose:	Logs to c:\windows\temp if c:\windows\temp\omdebug.txt exists
+#==================================================================================
+
+Function LogWrite
+{
+    Param ([string]$logstring)
+    $LogTime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
+    if (Test-Path $Logfile) {
+        if ((Get-Item $Logfile).length -gt 5024kb){
+            Remove-Item $Logfile
+        }
+    }
+    if (Test-Path C:\windows\Temp\omdebug.txt){
+        $domain=[Environment]::UserDomainName
+        $user=[Environment]::UserName
+        Add-content $Logfile -value "[$LogTime]  $domain\$user : $logstring"
+    }
+}
+## VERY Important.  Need to set PSModule path So we can import.
+#The script will fail without this.
+#Get the current module path
+$p = [Environment]::GetEnvironmentVariable(“PSModulePath”)
+
+#Add to the existing path the additional path to our module
+$setupKey = Get-Item -Path "HKLM:\Software\Microsoft\Microsoft Operations Manager\3.0\Setup";
+$installDirectory = $setupKey.GetValue("InstallDirectory") | Split-Path
+$psmPath = $installdirectory + '\Powershell\OperationsManager\OperationsManager.psm1'
+try {
+Import-Module $psmPath
+}
+catch [Exception] {
+LogWrite "1. Import-Module Exception: ",$_.Exception.Message
+exit 1
+}
+
+try {
+    Import-Module  OperationsManager
+    #add OpsMgr snapin
+    add-pssnapin "Microsoft.EnterpriseManagement.OperationsManager.Client";
+}
+catch [Exception] {
+    LogWrite "Import-Module Exception: ",$_.Exception.Message
+    exit 1
+}
+
+$SCRIPT_NAME			= 'Intel.FabAuto.Agentless.Computer.Discovery.ps1'
+$Logfile = "c:\windows\temp\$SCRIPT_NAME.log"
+
+
+LogWrite "Script v$VERSION"
+LogWrite "Arguments: $sourceId, $managedEntityId, $RMSName"
+
+$api = new-object -comObject 'MOM.ScriptAPI'
+ 
+$discoveryData = $api.CreateDiscoveryData(0, $sourceId, $managedEntityId)
+
+## attempt to autodetect site prefix based on scom server name
+$HostName = (hostname).ToUpper()
+$prefix = $HostName.Substring(0,3)
+if ($prefix.StartsWith("RF")){
+	$SiteName = "fd1"
+}elseif($HostName.StartsWith("CCE")){
+	$SiteName = "mit"
+}else{
+	$SiteName = $prefix
+}
+
+$SiteName = "TEST"
+
+#### Get list of Gateways
+$url="http://iotlog.intel.com/scripts/nodes.$SiteName.SCOM"
+Invoke-WebRequest -Uri $url -OutFile ".\nodes.txt"
+$servers= get-content ".\nodes.txt"
+
+foreach ($server in $servers){
+  try{
+      if ($server){
+        if ((-not [string]::IsNullOrEmpty($server)) -and (Test-NetConnection -Port 22 -ComputerName $server).TcpTestSucceeded){ #Only if pingable
+        #if ((-not [string]::IsNullOrEmpty($server)) ){ 
+          $Name=$server 
+          try {
+            $ip = [System.Net.Dns]::GetHostAddresses($Name)[0].IPAddressToString
+            $Name = [System.Net.Dns]::GetHostByName($server)[0].Hostname
+          }
+          catch {
+            $ip=[string]([guid]::NewGuid())
+            $Name = $server
+          }
+          $instance = $discoveryData.CreateClassInstance("$MPElement[Name='Intel.FabAuto.Unix.Agentless.IOT.Computer']$")
+           $instance.AddProperty("$MPElement[Name='Intel.FabAuto.Unix.Agentless.IOT.Computer']/PrincipalName$", $Name)
+           $instance.AddProperty("$MPElement[Name='Intel.FabAuto.Unix.Agentless.IOT.Computer']/DNSName$", $Name)
+           $instance.AddProperty("$MPElement[Name='Intel.FabAuto.Unix.Agentless.IOT.Computer']/NetworkName$", $Name)
+           $instance.AddProperty("$MPElement[Name='Intel.FabAuto.Unix.Agentless.IOT.Computer']/IPAddress$", $ip)
+          $instance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $Name)
+          $discoveryData.AddInstance($instance)    
+          LogWrite "Adding $Name [$ip] to discovered  servers"
+        }
+      }
+  }
+  catch {
+    LogWrite "Error Adding $Name of to discovered  servers"
+  }
+}
+$api.Return($discoveryData)
+LogWrite "Discovery script completed."
+              
+              </Contents>
+            </File>
+          </Files>
+        </DataSource>
+      </Discovery>
+    </Discoveries>
+    <Monitors>
+      <UnitMonitor ID="Intel.FabAuto.Unix.Agentless.Connection.Monitor" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Intel.FabAuto.Unix.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="Intel.FabAuto.Unix.Agentless.Connection.Monitor_AlertMessageResourceID">
+          <AlertOnState>Warning</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>Warning</AlertSeverity>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="StatusOK" HealthState="Success" />
+          <OperationalState ID="UnHealthy" MonitorTypeStateID="StatusError" HealthState="Warning" />
+        </OperationalStates>
+        <Configuration>
+          <Interval>7200</Interval>
+          <SyncTime />
+          <TargetSystem>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</TargetSystem>
+          <SSHCommand>/usr/bin/uptime</SSHCommand>
+          <Port>22</Port>
+          <Timeout>60</Timeout>
+          <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
+          <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
+          <FilterExpression>
+            <RegExExpression>
+              <ValueExpression>
+                <XPathQuery>//stdout</XPathQuery>
+              </ValueExpression>
+              <Operator>MatchesRegularExpression</Operator>
+              <Pattern>.*</Pattern>
+            </RegExExpression>
+          </FilterExpression>
+          <ErrorExpression>
+            <RegExExpression>
+              <ValueExpression>
+                <XPathQuery>//stdout</XPathQuery>
+              </ValueExpression>
+              <Operator>DoesNotMatchRegularExpression</Operator>
+              <Pattern>.*load.*</Pattern>
+            </RegExExpression>
+          </ErrorExpression>
+          <SuccessExpression>
+            <RegExExpression>
+              <ValueExpression>
+                <XPathQuery>//stdout</XPathQuery>
+              </ValueExpression>
+              <Operator>MatchesRegularExpression</Operator>
+              <Pattern>.*load.*</Pattern>
+            </RegExExpression>
+          </SuccessExpression>
+        </Configuration>
+      </UnitMonitor>
+    </Monitors>
+  </Monitoring>
+  <Presentation>
+    <Views>
+      <View ID="Intel.FabAuto.Unix.Agentless.IOT.Computer.State.View" Accessibility="Public" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+        <Category>Operations</Category>
+        <Criteria>
+          <InMaintenanceMode>false</InMaintenanceMode>
+        </Criteria>
+        <Presentation>
+          <ColumnInfo Index="0" SortIndex="0" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Descending">
+            <Name>State</Name>
+            <Id>Intel.FabAuto.Unix.Agentless.IOT.Computer</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="1" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Maintenance Mode</Name>
+            <Id>InMaintenanceMode</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="2" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Name</Name>
+            <Id>Name</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="3" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Path</Name>
+            <Id>Path</Id>
+          </ColumnInfo>
+        </Presentation>
+        <Target />
+      </View>
+      <View ID="Intel.FabAuto.Unix.Agentless.IOT.Computer.Alert.View" Accessibility="Public" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" TypeID="SC!Microsoft.SystemCenter.AlertViewType" Visible="true">
+        <Category>Operations</Category>
+        <Criteria>
+          <ResolutionState>
+            <State>0</State>
+          </ResolutionState>
+        </Criteria>
+        <Presentation>
+          <ColumnInfo Index="0" SortIndex="0" Width="22" Grouped="true" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Severity</Name>
+            <Id>Severity</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="1" SortIndex="-1" Width="54" Grouped="false" Sorted="false" IsSortable="false" Visible="true" SortOrder="Ascending">
+            <Name>Icon</Name>
+            <Id>Icon</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="2" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Path</Name>
+            <Id>MonitoringObjectPath</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="3" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Source</Name>
+            <Id>MonitoringObjectDisplayName</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="4" SortIndex="-1" Width="22" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Maintenance Mode</Name>
+            <Id>MonitoringObjectInMaintenanceMode</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="5" SortIndex="-1" Width="250" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Name</Name>
+            <Id>Name</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="6" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Resolution State</Name>
+            <Id>ResolutionState</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="7" SortIndex="-1" Width="150" Grouped="false" Sorted="false" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Created</Name>
+            <Id>TimeRaised</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="8" SortIndex="1" Width="100" Grouped="false" Sorted="true" IsSortable="true" Visible="true" SortOrder="Ascending">
+            <Name>Age</Name>
+            <Id>Age</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="9" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Type</Name>
+            <Id>Category</Id>
+          </ColumnInfo>
+          <ColumnInfo Index="10" SortIndex="-1" Width="100" Grouped="false" Sorted="false" IsSortable="true" Visible="false" SortOrder="Ascending">
+            <Name>Owner</Name>
+            <Id>Owner</Id>
+          </ColumnInfo>
+        </Presentation>
+        <Target></Target>
+      </View>
+    </Views>
+    <Folders>
+      <Folder ID="Intel.FabAuto.Unix.Agentless.IOT.Computer.Views.Folder" Accessibility="Internal" ParentFolder="SC!Microsoft.SystemCenter.Monitoring.ViewFolder.Root" />
+    </Folders>
+    <FolderItems>
+      <FolderItem ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer.State.View" ID="Intel.FabAuto.Unix.Agentless.IOT.Computer.State.View" Folder="Intel.FabAuto.Unix.Agentless.IOT.Computer.Views.Folder" />
+      <FolderItem ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer.Alert.View" ID="Intel.FabAuto.Unix.Agentless.IOT.Computer.Alert.View" Folder="Intel.FabAuto.Unix.Agentless.IOT.Computer.Views.Folder" />
+    </FolderItems>
+    <StringResources>
+      <StringResource ID="Intel.FabAuto.Unix.Agentless.Connection.Monitor_AlertMessageResourceID" />
+    </StringResources>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer">
+          <Name>Agentless Unix Computer</Name>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer.Views.Folder">
+          <Name>Intel Iot Agentless Gateways</Name>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer.Alert.View">
+          <Name>Alerts</Name>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer.State.View">
+          <Name>States</Name>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.Connection.Monitor_AlertMessageResourceID">
+          <Name>Unix Agentless Computer Connection</Name>
+          <Description>Unable to complete a successful connection.  Please check "Unix Action Account" credentials or if system is up.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.Connection.Monitor">
+          <Name>Connection Status</Name>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer" SubElementID="NetworkName">
+          <Name>Network Name</Name>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer" SubElementID="DNSName">
+          <Name>DNS Name</Name>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer" SubElementID="PrincipalName">
+          <Name>Principal Name</Name>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer" SubElementID="SSHPort">
+          <Name>SSHPort</Name>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer" SubElementID="Architecture">
+          <Name>Architecture</Name>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer" SubElementID="TimeZoneOffset">
+          <Name>TimeZoneOffset</Name>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer" SubElementID="LogicalProcessors">
+          <Name>LogicalProcessors</Name>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer" SubElementID="PhysicalProcessors">
+          <Name>PhysicalProcessors</Name>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer" SubElementID="IPAddress">
+          <Name>IPAddress</Name>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.IoT.Agentless.ActionAccount">
+          <Name>Linux IoT Agentless Action Account</Name>
+          <Description>This account is used for low privilege Linux Agentless IoT access.</Description>
+        </DisplayString>
+      </DisplayStrings>
+      <KnowledgeArticles>
+        <KnowledgeArticle ElementID="Intel.FabAuto.Unix.Agentless.Connection.Monitor" Visible="true">
+          <MamlContent>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Summary</maml:title>
+              <maml:para>Upon receiving this alert, you should check the "Unix Agentless Computer" view to determine which nodes are affected.  </maml:para>
+            </maml:section>
+            <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
+              <maml:title>Causes</maml:title>
+              <maml:para>Either the Unix Action account password is incorrect or the system is down </maml:para>
+            </maml:section>
+          </MamlContent>
+        </KnowledgeArticle>
+      </KnowledgeArticles>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPack>
