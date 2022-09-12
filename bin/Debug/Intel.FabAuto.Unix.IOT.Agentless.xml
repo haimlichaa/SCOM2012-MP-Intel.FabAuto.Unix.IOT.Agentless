@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>Intel.FabAuto.Unix.IOT.Agentless</ID>
-      <Version>3.0.0.2</Version>
+      <Version>3.0.0.3</Version>
     </Identity>
     <Name>Unix.IOT.Agentless</Name>
     <References>
@@ -49,7 +49,7 @@
       <SecureReference ID="Intel.FabAuto.IoT.Agentless.ActionAccount" Accessibility="Public" Context="System!System.Entity" />
     </SecureReferences>
     <ModuleTypes>
-      <DataSourceModuleType ID="Intel.FabAuto.Unix.Agentless.Server.TimedSSHCommand.PropertyBag.DataSource" Accessibility="Public" Batching="false">
+      <DataSourceModuleType ID="Intel.FabAuto.Unix.Agentless.IOT.TimedSSHCommand.PropertyBag.DataSource" Accessibility="Public" Batching="false">
         <Configuration>
           <IncludeSchemaTypes>
             <SchemaType>System!System.ExpressionEvaluatorSchema</SchemaType>
@@ -110,7 +110,7 @@
         </ModuleImplementation>
         <OutputType>System!System.PropertyBagData</OutputType>
       </DataSourceModuleType>
-      <DataSourceModuleType ID="Intel.FabAuto.Unix.Agentless.Server.TimedSSHCommand.DataSource" Accessibility="Public" Batching="false">
+      <DataSourceModuleType ID="Intel.FabAuto.Unix.Agentless.IOT.TimedSSHCommand.DataSource" Accessibility="Public" Batching="false">
         <Configuration>
           <IncludeSchemaTypes>
             <SchemaType>System!System.ExpressionEvaluatorSchema</SchemaType>
@@ -165,7 +165,7 @@
         </ModuleImplementation>
         <OutputType>System!System.BaseData</OutputType>
       </DataSourceModuleType>
-      <DataSourceModuleType ID="Intel.FabAuto.Agentless.TimedSshCommand.Discovery.DataSource" Accessibility="Public" Batching="false">
+      <DataSourceModuleType ID="Intel.FabAuto.Agentless.IOT.TimedSshCommand.Discovery.DataSource" Accessibility="Public" Batching="false">
         <Configuration>
           <IncludeSchemaTypes>
             <SchemaType>System!System.Discovery.MapperSchema</SchemaType>
@@ -230,6 +230,69 @@
         </ModuleImplementation>
         <OutputType>System!System.Discovery.Data</OutputType>
       </DataSourceModuleType>
+      <DataSourceModuleType ID="Intel.FabAuto.Unix.Agentless.IOT.TimedShellCommand.EventDataSource" Accessibility="Public" Batching="true">
+        <Configuration>
+          <xsd:element name="TargetSystem" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SSHCommand" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="UserName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Password" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="RegExpPattern" type="xsd:string" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="EventLevel" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Timeout" type="xsd:integer" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TargetSystem" Selector="$Config/TargetSystem$" ParameterType="string" />
+          <OverrideableParameter ID="SSHCommand" Selector="$Config/SSHCommand$" ParameterType="string" />
+          <OverrideableParameter ID="RegExpPattern" Selector="$Config/RegExpPattern$" ParameterType="string" />
+          <OverrideableParameter ID="EventLevel" Selector="$Config/EventLevel$" ParameterType="int" />
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="Timeout" Selector="$Config/Timeout$" ParameterType="int" />
+        </OverrideableParameters>
+        <ModuleImplementation Isolation="Any">
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Script" TypeID="Intel.FabAuto.Unix.Agentless.IOT.TimedSSHCommand.DataSource">
+                <Interval>$Config/IntervalSeconds$</Interval>
+                <SyncTime />
+                <TargetSystem>$Config/TargetSystem$</TargetSystem>
+                <SSHCommand>$Config/SSHCommand$</SSHCommand>
+                <Timeout>$Config/Timeout$</Timeout>
+                <UserName>$Config/UserName$</UserName>
+                <Password>$Config/Password$</Password>
+                <FilterExpression>
+                  <RegExExpression>
+                    <ValueExpression>
+                      <XPathQuery>//*[local-name()="StdOut"]</XPathQuery>
+                    </ValueExpression>
+                    <Operator>MatchesRegularExpression</Operator>
+                    <Pattern>$Config/RegExpPattern$</Pattern>
+                  </RegExExpression>
+                </FilterExpression>
+              </DataSource>
+              <ConditionDetection ID="Mapper" TypeID="System!System.Event.GenericDataMapper">
+                <EventOriginId>$Target/Id$</EventOriginId>
+                <PublisherId>$MPElement$</PublisherId>
+                <PublisherName>WSManEventProvider</PublisherName>
+                <Channel>WSManEventProvider</Channel>
+                <LoggingComputer>$Config/TargetSystem$</LoggingComputer>
+                <EventNumber>0</EventNumber>
+                <EventCategory>3</EventCategory>
+                <EventLevel>$Config/EventLevel$</EventLevel>
+                <UserName>notdefined</UserName>
+                <Description>$Data///*[local-name()="StdOut"]$</Description>
+                <Params />
+              </ConditionDetection>
+            </MemberModules>
+            <Composition>
+              <Node ID="Mapper">
+                <Node ID="Script" />
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.Event.Data</OutputType>
+      </DataSourceModuleType>
       <ProbeActionModuleType ID="Intel.FabAuto.Unix.Agentless.SSHCommand.PropertyBag.ProbeAction" Accessibility="Public" Batching="false" PassThrough="false">
         <Configuration>
           <xsd:element name="TargetSystem" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
@@ -280,7 +343,7 @@
       </ProbeActionModuleType>
     </ModuleTypes>
     <MonitorTypes>
-      <UnitMonitorType ID="Intel.FabAuto.Unix.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" Accessibility="Public">
+      <UnitMonitorType ID="Intel.FabAuto.Unix.IOT.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" Accessibility="Public">
         <MonitorTypeStates>
           <MonitorTypeState ID="StatusOK" NoDetection="false" />
           <MonitorTypeState ID="StatusError" NoDetection="false" />
@@ -308,7 +371,7 @@
         </OverrideableParameters>
         <MonitorImplementation>
           <MemberModules>
-            <DataSource ID="InvokeDS" TypeID="Intel.FabAuto.Unix.Agentless.Server.TimedSSHCommand.DataSource">
+            <DataSource ID="InvokeDS" TypeID="Intel.FabAuto.Unix.Agentless.IOT.TimedSSHCommand.DataSource">
               <Interval>$Config/Interval$</Interval>
               <SyncTime>$Config/SyncTime$</SyncTime>
               <TargetSystem>$Config/TargetSystem$</TargetSystem>
@@ -489,9 +552,9 @@ LogWrite "Discovery script completed."
       </Discovery>
     </Discoveries>
     <Monitors>
-      <UnitMonitor ID="Intel.FabAuto.Unix.Agentless.Connection.Monitor" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Intel.FabAuto.Unix.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" ConfirmDelivery="false">
+      <UnitMonitor ID="Intel.FabAuto.Unix.Agentless.Connection.Monitor" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Intel.FabAuto.Unix.IOT.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
-        <AlertSettings AlertMessage="Intel.FabAuto.Unix.Agentless.Connection.Monitor_AlertMessageResourceID">
+        <AlertSettings AlertMessage="Intel.FabAuto.Unix.IOT.Agentless.Connection.Monitor_AlertMessageResourceID">
           <AlertOnState>Warning</AlertOnState>
           <AutoResolve>true</AutoResolve>
           <AlertPriority>Normal</AlertPriority>
@@ -632,7 +695,7 @@ LogWrite "Discovery script completed."
       <FolderItem ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer.Alert.View" ID="Intel.FabAuto.Unix.Agentless.IOT.Computer.Alert.View" Folder="Intel.FabAuto.Unix.Agentless.IOT.Computer.Views.Folder" />
     </FolderItems>
     <StringResources>
-      <StringResource ID="Intel.FabAuto.Unix.Agentless.Connection.Monitor_AlertMessageResourceID" />
+      <StringResource ID="Intel.FabAuto.Unix.IOT.Agentless.Connection.Monitor_AlertMessageResourceID" />
     </StringResources>
   </Presentation>
   <LanguagePacks>
@@ -650,7 +713,7 @@ LogWrite "Discovery script completed."
         <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer.State.View">
           <Name>States</Name>
         </DisplayString>
-        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.Connection.Monitor_AlertMessageResourceID">
+        <DisplayString ElementID="Intel.FabAuto.Unix.IOT.Agentless.Connection.Monitor_AlertMessageResourceID">
           <Name>Unix Agentless Computer Connection</Name>
           <Description>Unable to complete a successful connection.  Please check "Unix Action Account" credentials or if system is up.</Description>
         </DisplayString>
