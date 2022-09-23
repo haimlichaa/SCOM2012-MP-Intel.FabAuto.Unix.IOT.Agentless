@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>Intel.FabAuto.Unix.IOT.Agentless</ID>
-      <Version>3.0.0.7</Version>
+      <Version>3.0.0.81</Version>
     </Identity>
     <Name>Unix.IOT.Agentless</Name>
     <References>
@@ -40,6 +40,7 @@
         <ClassType ID="Intel.FabAuto.Unix.Agentless.IOT.Computer" Accessibility="Public" Abstract="false" Base="System!System.LogicalHardware" Hosted="false" Singleton="false">
           <Property ID="PrincipalName" Type="string" AutoIncrement="false" Key="true" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
           <Property ID="DNSName" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
+          <Property ID="HostName" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
           <Property ID="IPAddress" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
           <Property ID="NetworkName" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
           <Property ID="SSHPort" Type="string" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
@@ -953,6 +954,7 @@ foreach ($server in $servers){
           $instance = $discoveryData.CreateClassInstance("$MPElement[Name='Intel.FabAuto.Unix.Agentless.IOT.Computer']$")
            $instance.AddProperty("$MPElement[Name='Intel.FabAuto.Unix.Agentless.IOT.Computer']/PrincipalName$", $Name)
            $instance.AddProperty("$MPElement[Name='Intel.FabAuto.Unix.Agentless.IOT.Computer']/DNSName$", $Name)
+           $instance.AddProperty("$MPElement[Name='Intel.FabAuto.Unix.Agentless.IOT.Computer']/HostName$", $Name.split(".")[0])
            $instance.AddProperty("$MPElement[Name='Intel.FabAuto.Unix.Agentless.IOT.Computer']/NetworkName$", $Name)
            $instance.AddProperty("$MPElement[Name='Intel.FabAuto.Unix.Agentless.IOT.Computer']/IPAddress$", $ip)
           $instance.AddProperty("$MPElement[Name='System!System.Entity']/DisplayName$", $Name)
@@ -996,10 +998,10 @@ LogWrite "Discovery script completed."
         <DataSources>
           <DataSource ID="Script" TypeID="Intel.FabAuto.Unix.Agentless.IOT.TimedShellCommand.EventDataSource">
             <TargetSystem>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</TargetSystem>
-            <SSHCommand>/usr/bin/uptime</SSHCommand>
+            <SSHCommand>/bin/hostname</SSHCommand>
             <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
             <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
-            <RegExpPattern>.*load.*</RegExpPattern>
+            <RegExpPattern>.*$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/HostName$.*</RegExpPattern>
             <EventLevel>2</EventLevel>
             <IntervalSeconds>1800</IntervalSeconds>
             <Timeout>300</Timeout>
@@ -1211,6 +1213,9 @@ LogWrite "Discovery script completed."
         </DisplayString>
         <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer" SubElementID="DNSName">
           <Name>DNS Name</Name>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer" SubElementID="HostName">
+          <Name>Host Name</Name>
         </DisplayString>
         <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer" SubElementID="PrincipalName">
           <Name>Principal Name</Name>
