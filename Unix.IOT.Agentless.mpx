@@ -454,7 +454,7 @@
                   LogWrite "...Found $Count Agents of $ClassName Instances"
 
                   #Get Alive Events From past hour
-                  $AliveAgents=Get-SCOMEvent (get-scomrule -DisplayName "*IOT Agentless Alive*") -EventLogName WSManEventProvider |where-object { $_.Description -match ".*load.*" -and ($_.TimeAdded -gt (Get-Date).AddMinutes($EventLookBack).ToUniversalTime())}|Select LoggingComputer -Unique
+                  $AliveAgents=Get-SCOMEvent (get-scomrule -DisplayName "*IOT Agentless Alive*") -EventLogName WSManEventProvider |where-object { $_.Description -match ".*" -and ($_.TimeAdded -gt (Get-Date).AddMinutes($EventLookBack).ToUniversalTime())}|Select LoggingComputer -Unique
 
                   $Count=$AliveAgents.Count
                   LogWrite "....Of which $Count are alive"
