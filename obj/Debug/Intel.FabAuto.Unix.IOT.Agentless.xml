@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>Intel.FabAuto.Unix.IOT.Agentless</ID>
-      <Version>3.0.0.5</Version>
+      <Version>3.0.0.7</Version>
     </Identity>
     <Name>Unix.IOT.Agentless</Name>
     <References>
@@ -269,7 +269,7 @@
                 <FilterExpression>
                   <RegExExpression>
                     <ValueExpression>
-                      <XPathQuery>//*[local-name()="StdOut"]</XPathQuery>
+                      <XPathQuery>//stdout</XPathQuery>
                     </ValueExpression>
                     <Operator>MatchesRegularExpression</Operator>
                     <Pattern>$Config/RegExpPattern$</Pattern>
@@ -286,7 +286,7 @@
                 <EventCategory>3</EventCategory>
                 <EventLevel>$Config/EventLevel$</EventLevel>
                 <UserName>notdefined</UserName>
-                <Description>$Data///*[local-name()="StdOut"]$</Description>
+                <Description>$Data///stdout$</Description>
                 <Params />
               </ConditionDetection>
             </MemberModules>
@@ -344,7 +344,7 @@
                   #                  04/15/2021 - haim.lichaa@intel.com added configurable event lookback time
                   #   Example usage: Powershell .\Script.ps1 -ClassName Microsoft.Unix.Computer -MaxMissingHB 1
                   #*********************************************************************
-                  param($ClassName="Intel.FabAuto.Unix.IOT.Agentless.Gateway.Device",$MaxMissingHB=2,$Debug=0,$EventLookBack=-60,$WarningEvent=2)
+                  param($ClassName="Intel.FabAuto.Unix.Agentless.IOT.Computer",$MaxMissingHB=2,$Debug=0,$EventLookBack=-60,$WarningEvent=2)
                   $VERSION="1.0.6"
                   #WarningEvent is # of times minus MaxMissingHB tto start recycling
 
@@ -555,7 +555,7 @@
                 <Parameters>
                   <Parameter>
                     <Name>ClassName</Name>
-                    <Value>Intel.FabAuto.Unix.IOT.Agentless.Gateway.Device</Value>
+                    <Value>Intel.FabAuto.Unix.Agentless.IOT.Computer</Value>
                   </Parameter>
                   <Parameter>
                     <Name>MaxMissingHB</Name>
