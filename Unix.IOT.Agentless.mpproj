@@ -6,7 +6,7 @@
     <RootNamespace>Intel.FabAuto.Unix.IOT.Agentless</RootNamespace>
     <Name>Unix.IOT.Agentless</Name>
     <ManagementPackName>Intel.FabAuto.Unix.IOT.Agentless</ManagementPackName>
-    <Version>3.0.0.82</Version>
+    <Version>3.0.0.84</Version>
     <MpFrameworkVersion>v7.0.1</MpFrameworkVersion>
     <MpFrameworkProfile>OM</MpFrameworkProfile>
     <ProductVersion>1.1.0.0</ProductVersion>
@@ -75,6 +75,11 @@
     <Compile Include="Unix.IOT.Agentless.mpx">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="SPCPMQuery.exe">
+      <SubType>Content</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
 </Project>

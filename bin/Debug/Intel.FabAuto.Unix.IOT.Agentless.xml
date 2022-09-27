@@ -1,9 +1,9 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ManagementPack SchemaVersion="2.0" ContentReadable="true" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Manifest>
     <Identity>
       <ID>Intel.FabAuto.Unix.IOT.Agentless</ID>
-      <Version>3.0.0.82</Version>
+      <Version>3.0.0.84</Version>
     </Identity>
     <Name>Unix.IOT.Agentless</Name>
     <References>
@@ -631,6 +631,187 @@
         <OutputType>System!System.PropertyBagData</OutputType>
         <InputType>System!System.BaseData</InputType>
       </ProbeActionModuleType>
+      <WriteActionModuleType ID="Intel.Linux.Ubuntu.IoT.Agentless.SPCPMQuery.WriteAction" Accessibility="Public">
+        <Configuration>
+          <xsd:element name="Host" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SiteName" type="xsd:string" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MQTTServer" type="xsd:string" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MQTTUser" type="xsd:string" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MQTTPassword" type="xsd:string" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MaintModeHours" type="xsd:string" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="Host" ParameterType="string" Selector="$Config/Host$" />
+          <OverrideableParameter ID="SiteName" ParameterType="string" Selector="$Config/SiteName$" />
+          <OverrideableParameter ID="MQTTServer" ParameterType="string" Selector="$Config/MQTTServer$" />
+          <OverrideableParameter ID="MQTTUser" ParameterType="string" Selector="$Config/MQTTUser$" />
+          <OverrideableParameter ID="MQTTPassword" ParameterType="string" Selector="$Config/MQTTPassword$" />
+          <OverrideableParameter ID="MaintModeHours" ParameterType="string" Selector="$Config/MQTTPassword$" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <WriteAction ID="SPCPMQuery" TypeID="Windows!Microsoft.Windows.PowerShellWriteAction">
+                <ScriptName>SPCMMQUery.ps1</ScriptName>
+                <ScriptBody>
+                  ## Queries SPCMM topic to get tool PM
+                  ## haim.lichaa@intel.com 2022
+                  ## v2.2 17-Jun-22 Added dynamic scom dir lookup
+                  ## v2.1 5-May-22 Added bagged state
+                  ## v1.1 7-Mar-22 dynamic site detection
+                  ## v1.0 2-Feb-22 Initial
+                  Param ([string]$GWName, [string]$SPCPMQueryCMD, [string]$SiteName="GEN", [string]$MQTTServer, [string]$MQTTUsername, [string]$MQTTPassword, [int]$MaintModeHours=24)
+
+                  ## attempt to autodetect mqtt server and site based on MGMT server hostname
+                  $HostName = (hostname).ToUpper()
+                  $prefix = $HostName.Substring(0,3)
+
+
+                  if ( $MQTTServer.Length -lt 2){
+                  if ($prefix.StartsWith("RF")){
+                  $MQTTServer = ($HostName.Substring(0,4))+"VXAP692"
+                  $SiteName = "FD1"
+                  }elseif($HostName.StartsWith("CCE")){
+                  $MQTTServer = "mqtt.fm.intel.com"
+                  $SiteName = $prefix
+                  }else{
+                  $MQTTServer = ($HostName.Substring(0,4))+"VXAP692"
+                  $SiteName = $prefix
+                  }
+
+                  }
+
+
+                  $VERSION="v2.2"
+                  $SCRIPT_NAME= 'Intel.IOT.Agentless.SPCPMQuery.ps1'
+                  $Logfile = "c:\windows\temp\$SCRIPT_NAME.log"
+                  $env:SITENAME=$SiteName
+                  $env:MQTTSERVER=$MQTTServer
+                  $env:MQTTUSER=$MQTTUsername
+                  $env:MQTTPASS=$MQTTPassword
+                  $GWName=$GWName.ToUpper()
+                  $SiteName=$SiteName.ToUpper()
+
+
+                  #==================================================================================
+                  # Sub:		LogWrite
+                  # Purpose:	Logs to c:\windows\temp if c:\windows\temp\omdebug.txt exists
+                  #==================================================================================
+
+                  Function LogWrite
+                  {
+                  Param ([string]$logstring)
+                  $LogTime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
+                  if (Test-Path $Logfile) {
+                  if ((Get-Item $Logfile).length -gt 1024kb){
+                  Remove-Item $Logfile
+                  }
+                  }
+                  if (Test-Path C:\windows\Temp\omdebug.txt){
+                  $domain=[Environment]::UserDomainName
+                  $user=[Environment]::UserName
+                  if ($Debug -eq 1){
+                  echo  "[$LogTime]  $domain\$user : $logstring"
+                  }
+                  Add-content $Logfile -value "[$LogTime]  $domain\$user : $logstring"
+                  }
+                  }
+
+                  LogWrite "Running VERSION $VERSION"
+                  LogWrite "Parameters SPCPMQueryCMD=[$SPCPMQueryCMD], SiteName=[$SiteName], MQTTServer=[$MQTTServer], MQTTUsername=[$MQTTUsername], MQTTPassword=[$MQTTPassword], MaintModeHours=[$MaintModeHours]"
+
+                  $TOOLNAME=""
+
+                  if ($GWName.StartsWith("d1")) {
+                  $TOOLNAME=$GWName[2]+$GWName[3]+$GWName[4]+$GWName[5]+$GWName[6]+$GWName[7]
+                  }else{
+                  $TOOLNAME=$GWName[3]+$GWName[4]+$GWName[5]+$GWName[6]+$GWName[7]+$GWName[8]
+                  }
+
+                  $query = $SiteName+"_"+$TOOLNAME
+                  LogWrite "Running $SPCPMQueryCMD $query"
+                  $output = cmd /c "$SPCPMQueryCMD" $query
+
+                  ## VERY Important.  Need to set PSModule path So we can import.
+                  #The script will fail without this.
+                  #Get the current module path
+                  $p = [Environment]::GetEnvironmentVariable(“PSModulePath”)
+
+                  #Add to the existing path the additional path to our module
+                  $setupKey = Get-Item -Path "HKLM:\Software\Microsoft\Microsoft Operations Manager\3.0\Setup";
+                  $installDirectory = $setupKey.GetValue("InstallDirectory") | Split-Path
+                  $psmPath = $installdirectory + '\Powershell\OperationsManager\OperationsManager.psm1'
+                  try {
+                  Import-Module $psmPath
+                  }
+                  catch [Exception] {
+                  LogWrite "1. Import-Module Exception: ",$_.Exception.Message
+                  exit 1
+                  }
+
+                  #Set the new path to the PSModulePath variable
+                  #[Environment]::SetEnvironmentVariable("PSModulePath",$p)
+
+
+                  try {
+                  Import-Module  OperationsManager
+                  #add OpsMgr snapin
+                  add-pssnapin "Microsoft.EnterpriseManagement.OperationsManager.Client";
+                  }
+                  catch [Exception] {
+                  LogWrite "2. Import-Module Exception: ",$_.Exception.Message
+                  exit 1
+                  }
+                  if ($output.ToLower().contains(":inpm") -or $output.ToLower().contains(":bagged")){
+                  LogWrite "Tool $GWName in PM, placing in MM: $output"
+                  $monitoringObject = Get-SCOMClassInstance -Name $GWName
+                  $Time = ((Get-Date).AddHours($MaintModeHours))
+                  Start-SCOMMaintenanceMode -Instance $monitoringObject -EndTime $Time -Comment "Tool in PM; Auto-MM" -Reason "PlannedOther"
+                  }else{
+                  LogWrite "Tool $query [$GWName] not in PM: $output"
+                  }
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>GWName</Name>
+                    <Value>$Config/Host$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>SPCPMQueryCMD</Name>
+                    <Value>$FileResource[Name='Res.Intel.Ubuntu.IoT.Agentless.SPCPMQueryCMD.exe']/Path$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>SiteName</Name>
+                    <Value>$Config/SiteName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>MQTTServer</Name>
+                    <Value>$Config/MQTTServer$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>MQTTUsername</Name>
+                    <Value>$Config/MQTTUser$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>MQTTUPassword</Name>
+                    <Value>$Config/MQTTPassword$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>MaintModeHours</Name>
+                    <Value>$Config/MaintModeHours$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>300</TimeoutSeconds>
+              </WriteAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="SPCPMQuery" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.BaseData</OutputType>
+        <InputType>System!System.BaseData</InputType>
+      </WriteActionModuleType>
     </ModuleTypes>
     <MonitorTypes>
       <UnitMonitorType ID="Intel.FabAuto.Unix.IOT.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" Accessibility="Public">
@@ -825,6 +1006,122 @@
               </Node>
             </RegularDetection>
           </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+      <UnitMonitorType ID="Intel.Linux.Ubuntu.IoT.Agentless.SingleLogTimer3StateMonitorType" Accessibility="Public">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="TimerEventRaised" NoDetection="false" />
+          <MonitorTypeState ID="StatusWarning" NoDetection="false" />
+          <MonitorTypeState ID="StatusError" NoDetection="false" />
+        </MonitorTypeStates>
+        <Configuration>
+          <IncludeSchemaTypes>
+            <SchemaType>System!System.ExpressionEvaluatorSchema</SchemaType>
+          </IncludeSchemaTypes>
+          <xsd:element name="ComputerName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="LogFile" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Regex" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TimeStampDateFormat" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="UserName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Password" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Interval" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TimerWaitInSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SearchRangeInMinutes" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TailLastNLines" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WarningThreshold" type="xsd:double" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ErrorThreshold" type="xsd:double" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="LogFile" Selector="$Config/LogFile$" ParameterType="string" />
+          <OverrideableParameter ID="Regex" Selector="$Config/Regex$" ParameterType="string" />
+          <OverrideableParameter ID="Interval" Selector="$Config/Interval$" ParameterType="int" />
+          <OverrideableParameter ID="TimerWaitInSeconds" Selector="$Config/TimerWaitInSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SearchRangeInMinutes" Selector="$Config/SearchRangeInMinutes$" ParameterType="int" />
+          <OverrideableParameter ID="TailLastNLines" Selector="$Config/TailLastNLines$" ParameterType="int" />
+          <OverrideableParameter ID="WarningThreshold" Selector="$Config/WarningThreshold$" ParameterType="double" />
+          <OverrideableParameter ID="ErrorThreshold" Selector="$Config/ErrorThreshold$" ParameterType="double" />
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="DataSource" TypeID="Intel.FabAuto.Unix.Agentless.IOT.TimedSSHCommand.DataSource">
+              <Interval>$Config/Interval$</Interval>
+              <SyncTime />
+              <TargetSystem>$Config/ComputerName$</TargetSystem>
+              <SSHCommand>tail -n $Config/TailLastNLines$ '$Config/LogFile$' |sed -n '/$(date --date="$Config/SearchRangeInMinutes$ minutes ago" "+$Config/TimeStampDateFormat$")/,\$p'  |grep -ci '$Config/Regex$'</SSHCommand>
+              <Port>22</Port>
+              <Timeout>$Config/TimerWaitInSeconds$</Timeout>
+              <UserName>$Config/UserName$</UserName>
+              <Password>$Config/Password$</Password>
+              <FilterExpression />
+            </DataSource>
+            <ProbeAction ID="OnDemandReset" TypeID="System!System.PassThroughProbe" />
+            <ConditionDetection ID="TimerCondition" TypeID="System!System.TimerCondition">
+              <TimerWaitInSeconds>$Config/TimerWaitInSeconds$</TimerWaitInSeconds>
+            </ConditionDetection>
+            <ConditionDetection ID="CDStatusError" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Double">//stdout</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Greater</Operator>
+                  <ValueExpression>
+                    <Value Type="Double">$Config/ErrorThreshold$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="CDStatusWarning" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <And>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Double">//stdout</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Greater</Operator>
+                      <ValueExpression>
+                        <Value Type="Double">$Config/WarningThreshold$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Double">//stdout</XPathQuery>
+                      </ValueExpression>
+                      <Operator>LessEqual</Operator>
+                      <ValueExpression>
+                        <Value Type="Double">$Config/ErrorThreshold$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                </And>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="TimerEventRaised">
+              <Node ID="TimerCondition">
+                <Node ID="DataSource" />
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="StatusWarning">
+              <Node ID="CDStatusWarning">
+                <Node ID="DataSource" />
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="StatusError">
+              <Node ID="CDStatusError">
+                <Node ID="DataSource" />
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+          <OnDemandDetections>
+            <OnDemandDetection MonitorTypeStateID="TimerEventRaised">
+              <Node ID="OnDemandReset" />
+            </OnDemandDetection>
+          </OnDemandDetections>
         </MonitorImplementation>
       </UnitMonitorType>
     </MonitorTypes>
@@ -1039,7 +1336,7 @@ LogWrite "Discovery script completed."
           <WarningEvent>2</WarningEvent>
         </Configuration>
       </UnitMonitor>
-      <UnitMonitor ID="Intel.FabAuto.Unix.Agentless.Connection.Monitor" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Intel.FabAuto.Unix.IOT.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" ConfirmDelivery="false">
+      <UnitMonitor ID="Intel.FabAuto.Unix.Agentless.Connection.MonitorIntel.FabAuto.Unix.Agentless.SSH.Monitor" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Intel.FabAuto.Custom.Unix.Agentless.Aggregate" Remotable="true" Priority="Normal" TypeID="Intel.FabAuto.Unix.IOT.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="Intel.FabAuto.Unix.IOT.Agentless.Connection.Monitor_AlertMessageResourceID">
           <AlertOnState>Warning</AlertOnState>
@@ -1052,10 +1349,10 @@ LogWrite "Discovery script completed."
           <OperationalState ID="UnHealthy" MonitorTypeStateID="StatusError" HealthState="Warning" />
         </OperationalStates>
         <Configuration>
-          <Interval>3600</Interval>
+          <Interval>1800</Interval>
           <SyncTime />
           <TargetSystem>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</TargetSystem>
-          <SSHCommand>/usr/bin/uptime</SSHCommand>
+          <SSHCommand>/bin/hostname</SSHCommand>
           <Port>22</Port>
           <Timeout>60</Timeout>
           <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
@@ -1075,7 +1372,7 @@ LogWrite "Discovery script completed."
                 <XPathQuery>//stdout</XPathQuery>
               </ValueExpression>
               <Operator>DoesNotMatchRegularExpression</Operator>
-              <Pattern>.*load.*</Pattern>
+              <Pattern>.*$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/HostName$.*</Pattern>
             </RegExExpression>
           </ErrorExpression>
           <SuccessExpression>
@@ -1084,12 +1381,67 @@ LogWrite "Discovery script completed."
                 <XPathQuery>//stdout</XPathQuery>
               </ValueExpression>
               <Operator>MatchesRegularExpression</Operator>
-              <Pattern>.*load.*</Pattern>
+              <Pattern>.*$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/HostName$.*</Pattern>
             </RegExExpression>
           </SuccessExpression>
         </Configuration>
       </UnitMonitor>
+      <UnitMonitor ID="Intel.Linux.Ubuntu.IoT.Agentless.Beryl_Error_Code4.Monitor" Accessibility="Public" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Intel.Linux.Ubuntu.IoT.Agentless.SingleLogTimer3StateMonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="Intel.Linux.Ubuntu.IoT.Agentless.Beryl_Error_Code4.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>Error</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</AlertParameter1>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="StatusError" MonitorTypeStateID="StatusError" HealthState="Error" />
+          <OperationalState ID="StatusWarning" MonitorTypeStateID="StatusWarning" HealthState="Warning" />
+          <OperationalState ID="TimerEventRaised" MonitorTypeStateID="TimerEventRaised" HealthState="Success" />
+        </OperationalStates>
+        <Configuration>
+          <ComputerName>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</ComputerName>
+          <LogFile>/var/log/beryl/log.log</LogFile>
+          <Regex>Failed error code 4</Regex>
+          <TimeStampDateFormat>%Y-%m-%d %H:%M</TimeStampDateFormat>
+          <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
+          <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
+          <Interval>900</Interval>
+          <TimerWaitInSeconds>90</TimerWaitInSeconds>
+          <SearchRangeInMinutes>16</SearchRangeInMinutes>
+          <TailLastNLines>50000</TailLastNLines>
+          <WarningThreshold>0</WarningThreshold>
+          <ErrorThreshold>10</ErrorThreshold>
+        </Configuration>
+      </UnitMonitor>
     </Monitors>
+    <Recoveries>
+      <Recovery ID="Intel.IOT.FabAuto.Custom.GetAgentlessAlive.Unix.Monitor.SPCPMQuery.Warning.Recovery" Accessibility="Public" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" Monitor="Intel.IOT.FabAuto.Custom.GetAgentlessAlive.Unix.Monitor" ResetMonitor="true" ExecuteOnState="Warning" Remotable="true" Timeout="300">
+        <Category>Custom</Category>
+        <WriteAction ID="SPCPMQuery" TypeID="Intel.Linux.Ubuntu.IoT.Agentless.SPCPMQuery.WriteAction">
+          <Host>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</Host>
+          <SiteName></SiteName>
+          <MQTTServer></MQTTServer>
+          <MQTTUser></MQTTUser>
+          <MQTTPassword></MQTTPassword>
+          <MaintModeHours>24</MaintModeHours>
+        </WriteAction>
+      </Recovery>
+      <Recovery ID="Intel.Linux.Ubuntu.IoT.Agentless.Beryl_Error_Code4.Monitor.Error.Recovery" Accessibility="Public" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" Monitor="Intel.Linux.Ubuntu.IoT.Agentless.Beryl_Error_Code4.Monitor" ResetMonitor="true" ExecuteOnState="Error" Remotable="true" Timeout="300">
+        <Category>Custom</Category>
+        <WriteAction ID="recover" TypeID="Unix!Microsoft.Unix.SSHCommand.WriteAction">
+          <Host>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</Host>
+          <Port>22</Port>
+          <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
+          <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
+          <Command>systmctl restart beryl</Command>
+          <TimeoutSeconds>30</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+    </Recoveries>
   </Monitoring>
   <Presentation>
     <Views>
@@ -1184,6 +1536,7 @@ LogWrite "Discovery script completed."
     <StringResources>
       <StringResource ID="Intel.FabAuto.Unix.IOT.Agentless.Connection.Monitor_AlertMessageResourceID" />
       <StringResource ID="Intel.FabAuto.Custom.Unix.Agentless.Aggregate_AlertMessageResourceID" />
+      <StringResource ID="Intel.Linux.Ubuntu.IoT.Agentless.Beryl_Error_Code4.Monitor.AlertMessage" />
     </StringResources>
   </Presentation>
   <LanguagePacks>
@@ -1205,7 +1558,7 @@ LogWrite "Discovery script completed."
           <Name>Unix Agentless Computer Connection</Name>
           <Description>Unable to complete a successful connection.  Please check "Unix Action Account" credentials or if system is up.</Description>
         </DisplayString>
-        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.Connection.Monitor">
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.Connection.MonitorIntel.FabAuto.Unix.Agentless.SSH.Monitor">
           <Name>Connection Status</Name>
         </DisplayString>
         <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.IOT.Computer" SubElementID="NetworkName">
@@ -1260,9 +1613,21 @@ LogWrite "Discovery script completed."
           <Name>Linux IoT Agentless Action Account</Name>
           <Description>This account is used for low privilege Linux Agentless IoT access.</Description>
         </DisplayString>
+        <DisplayString ElementID="Intel.IOT.FabAuto.Custom.GetAgentlessAlive.Unix.Monitor.SPCPMQuery.Warning.Recovery">
+          <Name>SPC TOOL PM Query</Name>
+          <Description>Places GW in MM if Tool is in PM</Description>
+        </DisplayString>
+        <DisplayString ElementID="Intel.Linux.Ubuntu.IoT.Agentless.Beryl_Error_Code4.Monitor">
+          <Name>Beryl MQTT Publish Failure</Name>
+          <Description>Monitors MQTT publish failures</Description>
+        </DisplayString>
+        <DisplayString ElementID="Intel.Linux.Ubuntu.IoT.Agentless.Beryl_Error_Code4.Monitor.AlertMessage">
+          <Name>Beryl MQTT publish failure alert</Name>
+          <Description>{} beryl_daemon.py failed to publish to MQTT RC code 4; {} times in last hour</Description>
+        </DisplayString>
       </DisplayStrings>
       <KnowledgeArticles>
-        <KnowledgeArticle ElementID="Intel.FabAuto.Unix.Agentless.Connection.Monitor" Visible="true">
+        <KnowledgeArticle ElementID="Intel.FabAuto.Unix.Agentless.Connection.MonitorIntel.FabAuto.Unix.Agentless.SSH.Monitor" Visible="true">
           <MamlContent>
             <maml:section xmlns:maml="http://schemas.microsoft.com/maml/2004/10">
               <maml:title>Summary</maml:title>
@@ -1277,4 +1642,7 @@ LogWrite "Discovery script completed."
       </KnowledgeArticles>
     </LanguagePack>
   </LanguagePacks>
+  <Resources>
+    <DeployableResource ID="Res.Intel.Ubuntu.IoT.Agentless.SPCPMQueryCMD.exe" Accessibility="Internal" FileName="SPCPMQuery.exe" HasNullStream="false" />
+  </Resources>
 </ManagementPack>
