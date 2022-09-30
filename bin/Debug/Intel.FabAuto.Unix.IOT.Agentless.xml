@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>Intel.FabAuto.Unix.IOT.Agentless</ID>
-      <Version>3.0.0.116</Version>
+      <Version>3.0.0.117</Version>
     </Identity>
     <Name>Unix.IOT.Agentless</Name>
     <References>
@@ -1124,6 +1124,110 @@
           </OnDemandDetections>
         </MonitorImplementation>
       </UnitMonitorType>
+      <UnitMonitorType ID="Intel.Linux.Ubuntu.Iot.Agentless.RegEx.ProcessTCPCount.TwoState.MonitorType" Accessibility="Public">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="ProcessCountOK" NoDetection="false" />
+          <MonitorTypeState ID="ProcessCountError" NoDetection="false" />
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="Interval" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TargetSystem" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ProcessPattern" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="UserName" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Password" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MinProcessCount" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="MaxProcessCount" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="Interval" Selector="$Config/Interval$" ParameterType="int" />
+          <OverrideableParameter ID="ProcessPattern" Selector="$Config/ProcessPattern$" ParameterType="string" />
+          <OverrideableParameter ID="MinProcessCount" Selector="$Config/MinProcessCount$" ParameterType="int" />
+          <OverrideableParameter ID="MaxProcessCount" Selector="$Config/MaxProcessCount$" ParameterType="int" />
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="DS" TypeID="Intel.FabAuto.Unix.Agentless.IOT.TimedSSHCommand.DataSource">
+              <Interval>$Config/Interval$</Interval>
+              <SyncTime />
+              <TargetSystem>$Config/TargetSystem$</TargetSystem>
+              <SSHCommand>sudo lsof |grep $Config/ProcessPattern$|grep -i tcp |wc -l</SSHCommand>
+              <Port>22</Port>
+              <Timeout>20</Timeout>
+              <UserName>$Config/UserName$</UserName>
+              <Password>$Config/Password$</Password>
+              <FilterExpression />
+            </DataSource>
+            <ConditionDetection ID="CDProcessCountOK" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <And>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Integer">//stdout</XPathQuery>
+                      </ValueExpression>
+                      <Operator>GreaterEqual</Operator>
+                      <ValueExpression>
+                        <Value Type="Integer">$Config/MinProcessCount$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Integer">//stdout</XPathQuery>
+                      </ValueExpression>
+                      <Operator>LessEqual</Operator>
+                      <ValueExpression>
+                        <Value Type="Integer">$Config/MaxProcessCount$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                </And>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="CDProcessCountError" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <Or>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Integer">//stdout</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Less</Operator>
+                      <ValueExpression>
+                        <Value Type="Integer">$Config/MinProcessCount$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Integer">//stdout</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Greater</Operator>
+                      <ValueExpression>
+                        <Value Type="Integer">$Config/MaxProcessCount$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                </Or>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="ProcessCountOK">
+              <Node ID="CDProcessCountOK">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="ProcessCountError">
+              <Node ID="CDProcessCountError">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
     </MonitorTypes>
   </TypeDefinitions>
   <Monitoring>
@@ -1309,6 +1413,19 @@ LogWrite "Discovery script completed."
         </WriteActions>
       </Rule>
     </Rules>
+    <Tasks>
+      <Task ID="Intel.FabAuto.Unix.Agentless.Uptime.Task" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" Timeout="300" Remotable="true">
+        <Category>Maintenance</Category>
+        <WriteAction ID="test" TypeID="Unix!Microsoft.Unix.SSHCommand.WriteAction">
+          <Host>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</Host>
+          <Port>22</Port>
+          <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
+          <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
+          <Command>sudo hostname; sudo uptime</Command>
+          <TimeoutSeconds>30</TimeoutSeconds>
+        </WriteAction>
+      </Task>
+    </Tasks>
     <Monitors>
       <AggregateMonitor ID="Intel.FabAuto.Custom.Unix.Agentless.Aggregate" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal">
         <Category>Custom</Category>
@@ -1394,7 +1511,8 @@ LogWrite "Discovery script completed."
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>Warning</AlertSeverity>
           <AlertParameters>
-            <AlertParameter1>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</AlertParameter1>
+            <AlertParameter1>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/HostName$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Value$</AlertParameter2>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
@@ -1417,6 +1535,128 @@ LogWrite "Discovery script completed."
           <ErrorThreshold>10</ErrorThreshold>
         </Configuration>
       </UnitMonitor>
+      <UnitMonitor ID="Intel.Linux.Ubuntu.IoT.Agentless.Beryl.LogFile.Monitor" Accessibility="Public" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Intel.Linux.Ubuntu.IoT.Agentless.SingleLogTimer3StateMonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="Intel.Linux.Ubuntu.IoT.Agentless.Beryl.LogFile.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>Warning</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/HostName$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Value$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="StatusError" MonitorTypeStateID="StatusError" HealthState="Error" />
+          <OperationalState ID="StatusWarning" MonitorTypeStateID="StatusWarning" HealthState="Warning" />
+          <OperationalState ID="TimerEventRaised" MonitorTypeStateID="TimerEventRaised" HealthState="Success" />
+        </OperationalStates>
+        <Configuration>
+          <ComputerName>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</ComputerName>
+          <LogFile>/var/log/beryl/log.log</LogFile>
+          <Regex>SCOM_BERYL</Regex>
+          <TimeStampDateFormat>%Y-%m-%d %H:%M</TimeStampDateFormat>
+          <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
+          <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
+          <Interval>900</Interval>
+          <TimerWaitInSeconds>900</TimerWaitInSeconds>
+          <SearchRangeInMinutes>16</SearchRangeInMinutes>
+          <TailLastNLines>50000</TailLastNLines>
+          <WarningThreshold>0</WarningThreshold>
+          <ErrorThreshold>1</ErrorThreshold>
+        </Configuration>
+      </UnitMonitor>
+      <UnitMonitor ID="Intel.Linux.Ubuntu.IoT.Agentless.Adele.LogFile.Monitor" Accessibility="Public" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Intel.Linux.Ubuntu.IoT.Agentless.SingleLogTimer3StateMonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="Intel.Linux.Ubuntu.IoT.Agentless.Adele.LogFile.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>Warning</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/HostName$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Value$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="StatusError" MonitorTypeStateID="StatusError" HealthState="Error" />
+          <OperationalState ID="StatusWarning" MonitorTypeStateID="StatusWarning" HealthState="Warning" />
+          <OperationalState ID="TimerEventRaised" MonitorTypeStateID="TimerEventRaised" HealthState="Success" />
+        </OperationalStates>
+        <Configuration>
+          <ComputerName>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</ComputerName>
+          <LogFile>/var/log/beryl/log.log</LogFile>
+          <Regex>SCOM_ADELE</Regex>
+          <TimeStampDateFormat>%Y-%m-%d %H:%M</TimeStampDateFormat>
+          <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
+          <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
+          <Interval>900</Interval>
+          <TimerWaitInSeconds>900</TimerWaitInSeconds>
+          <SearchRangeInMinutes>16</SearchRangeInMinutes>
+          <TailLastNLines>50000</TailLastNLines>
+          <WarningThreshold>0</WarningThreshold>
+          <ErrorThreshold>1</ErrorThreshold>
+        </Configuration>
+      </UnitMonitor>
+      <UnitMonitor ID="Intel.Linux.Ubuntu.IoT.Agentless.Syslog.LogFile.Monitor" Accessibility="Public" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Intel.Linux.Ubuntu.IoT.Agentless.SingleLogTimer3StateMonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="Intel.Linux.Ubuntu.IoT.Agentless.Syslog.LogFile.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>Warning</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/HostName$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Value$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="StatusError" MonitorTypeStateID="StatusError" HealthState="Error" />
+          <OperationalState ID="StatusWarning" MonitorTypeStateID="StatusWarning" HealthState="Warning" />
+          <OperationalState ID="TimerEventRaised" MonitorTypeStateID="TimerEventRaised" HealthState="Success" />
+        </OperationalStates>
+        <Configuration>
+          <ComputerName>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</ComputerName>
+          <LogFile>/var/log/syslog</LogFile>
+          <Regex>SCOM_OS</Regex>
+          <TimeStampDateFormat>%Y-%m-%d %H:%M</TimeStampDateFormat>
+          <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
+          <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
+          <Interval>900</Interval>
+          <TimerWaitInSeconds>900</TimerWaitInSeconds>
+          <SearchRangeInMinutes>16</SearchRangeInMinutes>
+          <TailLastNLines>50000</TailLastNLines>
+          <WarningThreshold>0</WarningThreshold>
+          <ErrorThreshold>1</ErrorThreshold>
+        </Configuration>
+      </UnitMonitor>
+      <UnitMonitor ID="Intel.Linux.Ubuntu.Iot.Agentless.Beryl.ProcessTCPCount.TwoState.Monitor" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Intel.Linux.Ubuntu.Iot.Agentless.RegEx.ProcessTCPCount.TwoState.MonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="Intel.Linux.Ubuntu.Iot.Agentless.Beryl.ProcessTCPCount.TwoState.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>Warning</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</AlertParameter1>
+            <AlertParameter2>$Data/Context///stdout$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="ProcessCountOK" HealthState="Success" />
+          <OperationalState ID="UnHealthy" MonitorTypeStateID="ProcessCountError" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <Interval>900</Interval>
+          <TargetSystem>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</TargetSystem>
+          <ProcessPattern>beryl</ProcessPattern>
+          <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
+          <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
+          <MinProcessCount>0</MinProcessCount>
+          <MaxProcessCount>750</MaxProcessCount>
+        </Configuration>
+      </UnitMonitor>
     </Monitors>
     <Recoveries>
       <Recovery ID="Intel.IOT.FabAuto.Custom.GetAgentlessAlive.Unix.Monitor.SPCPMQuery.Warning.Recovery" Accessibility="Public" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" Monitor="Intel.IOT.FabAuto.Custom.GetAgentlessAlive.Unix.Monitor" ResetMonitor="true" ExecuteOnState="Warning" Remotable="true" Timeout="300">
@@ -1431,6 +1671,17 @@ LogWrite "Discovery script completed."
         </WriteAction>
       </Recovery>
       <Recovery ID="Intel.Linux.Ubuntu.IoT.Agentless.Beryl_Error_Code4.Monitor.Error.Recovery" Accessibility="Public" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" Monitor="Intel.Linux.Ubuntu.IoT.Agentless.Beryl_Error_Code4.Monitor" ResetMonitor="true" ExecuteOnState="Error" Remotable="true" Timeout="300">
+        <Category>Custom</Category>
+        <WriteAction ID="recover" TypeID="Unix!Microsoft.Unix.SSHCommand.WriteAction">
+          <Host>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</Host>
+          <Port>22</Port>
+          <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
+          <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
+          <Command>sudo systemctl restart beryl</Command>
+          <TimeoutSeconds>30</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+      <Recovery ID="Intel.Linux.Ubuntu.Iot.Agentless.Beryl.ProcessTCPCount.TwoState.Monitor.Recovery" Accessibility="Public" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" Monitor="Intel.Linux.Ubuntu.Iot.Agentless.Beryl.ProcessTCPCount.TwoState.Monitor" ResetMonitor="true" ExecuteOnState="Error" Remotable="true" Timeout="300">
         <Category>Custom</Category>
         <WriteAction ID="recover" TypeID="Unix!Microsoft.Unix.SSHCommand.WriteAction">
           <Host>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</Host>
@@ -1537,6 +1788,10 @@ LogWrite "Discovery script completed."
       <StringResource ID="Intel.FabAuto.Unix.IOT.Agentless.Connection.Monitor_AlertMessageResourceID" />
       <StringResource ID="Intel.FabAuto.Custom.Unix.Agentless.Aggregate_AlertMessageResourceID" />
       <StringResource ID="Intel.Linux.Ubuntu.IoT.Agentless.Beryl_Error_Code4.Monitor.AlertMessage" />
+      <StringResource ID="Intel.Linux.Ubuntu.IoT.Agentless.Beryl.LogFile.Monitor.AlertMessage" />
+      <StringResource ID="Intel.Linux.Ubuntu.IoT.Agentless.Adele.LogFile.Monitor.AlertMessage" />
+      <StringResource ID="Intel.Linux.Ubuntu.IoT.Agentless.Syslog.LogFile.Monitor.AlertMessage" />
+      <StringResource ID="Intel.Linux.Ubuntu.Iot.Agentless.Beryl.ProcessTCPCount.TwoState.Monitor.AlertMessage" />
     </StringResources>
   </Presentation>
   <LanguagePacks>
@@ -1617,13 +1872,48 @@ LogWrite "Discovery script completed."
           <Name>SPC TOOL PM Query</Name>
           <Description>Places GW in MM if Tool is in PM</Description>
         </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.Uptime.Task">
+          <Name>Agentless Uptime Task</Name>
+        </DisplayString>
         <DisplayString ElementID="Intel.Linux.Ubuntu.IoT.Agentless.Beryl_Error_Code4.Monitor">
           <Name>Beryl MQTT Publish Failure</Name>
           <Description>Monitors MQTT publish failures</Description>
         </DisplayString>
         <DisplayString ElementID="Intel.Linux.Ubuntu.IoT.Agentless.Beryl_Error_Code4.Monitor.AlertMessage">
           <Name>Beryl MQTT publish failure alert</Name>
-          <Description>{} beryl_daemon.py failed to publish to MQTT RC code 4; {} times in last hour</Description>
+          <Description>beryl_daemon.py on {0} failed to publish to MQTT RC code 4; {1} times in last hour</Description>
+        </DisplayString>
+        <DisplayString ElementID="Intel.Linux.Ubuntu.IoT.Agentless.Beryl.LogFile.Monitor">
+          <Name>Beryl Logfile Error</Name>
+          <Description>Monitors Beryl Logfile for SCOM_BERYL Generic issues</Description>
+        </DisplayString>
+        <DisplayString ElementID="Intel.Linux.Ubuntu.IoT.Agentless.Beryl.LogFile.Monitor.AlertMessage">
+          <Name>Beryl Generic Logfile Error Alert</Name>
+          <Description>beryl log error on {0} ; error is {1}</Description>
+        </DisplayString>
+        <DisplayString ElementID="Intel.Linux.Ubuntu.IoT.Agentless.Adele.LogFile.Monitor">
+          <Name>Adele Logfile Error</Name>
+          <Description>Monitors Beryl Logfile for SCOM_ADELE Generic issues</Description>
+        </DisplayString>
+        <DisplayString ElementID="Intel.Linux.Ubuntu.IoT.Agentless.Adele.LogFile.Monitor.AlertMessage">
+          <Name>Adele Generic Logfile Error Alert</Name>
+          <Description>beryl Adele log error on {0} ; error is {1}</Description>
+        </DisplayString>
+        <DisplayString ElementID="Intel.Linux.Ubuntu.IoT.Agentless.Syslog.LogFile.Monitor">
+          <Name>Syslog Logfile Error</Name>
+          <Description>Monitors Syslog Logfile for SCOM_OS Generic issues</Description>
+        </DisplayString>
+        <DisplayString ElementID="Intel.Linux.Ubuntu.IoT.Agentless.Syslog.LogFile.Monitor.AlertMessage">
+          <Name>Syslog Generic Logfile Error Alert</Name>
+          <Description>Syslog log error on {0} ; error is {1}</Description>
+        </DisplayString>
+        <DisplayString ElementID="Intel.Linux.Ubuntu.Iot.Agentless.Beryl.ProcessTCPCount.TwoState.Monitor">
+          <Name>beryl_daemon.py TCP connection Count Monitor</Name>
+          <Description>Monitors beryl_daemon.py TCP connection count and recycles if breaches threashold</Description>
+        </DisplayString>
+        <DisplayString ElementID="Intel.Linux.Ubuntu.Iot.Agentless.Beryl.ProcessTCPCount.TwoState.Monitor.AlertMessage">
+          <Name>beryl_daemon has too many TCP connections Monitor Alert</Name>
+          <Description>beryl_daemon.py has {0} connections open</Description>
         </DisplayString>
       </DisplayStrings>
       <KnowledgeArticles>
