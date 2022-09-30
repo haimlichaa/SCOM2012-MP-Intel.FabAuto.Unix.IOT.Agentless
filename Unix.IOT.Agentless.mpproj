@@ -6,7 +6,7 @@
     <RootNamespace>Intel.FabAuto.Unix.IOT.Agentless</RootNamespace>
     <Name>Unix.IOT.Agentless</Name>
     <ManagementPackName>Intel.FabAuto.Unix.IOT.Agentless</ManagementPackName>
-    <Version>3.0.0.115</Version>
+    <Version>3.0.0.116</Version>
     <MpFrameworkVersion>v7.0.1</MpFrameworkVersion>
     <MpFrameworkProfile>OM</MpFrameworkProfile>
     <ProductVersion>1.1.0.0</ProductVersion>
@@ -40,6 +40,12 @@
       <HintPath>C:\Users\hlichaa\OneDrive - Intel Corporation\Documents\github.intel.com\MPSeal\ManagementPacks.2\Microsoft.SystemCenter.DataWarehouse.Library.mp</HintPath>
       <Alias>MSDL</Alias>
       <MinVersion>7.1.10226.0</MinVersion>
+      <PackageToBundle>False</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.SystemCenter.InstanceGroup.Library">
+      <HintPath>C:\Users\hlichaa\OneDrive - Intel Corporation\Documents\github.intel.com\MPSeal\ManagementPacks.2\Microsoft.SystemCenter.InstanceGroup.Library.mp</HintPath>
+      <Alias>MSIL</Alias>
+      <MinVersion>7.5.8501.0</MinVersion>
       <PackageToBundle>False</PackageToBundle>
     </ManagementPackReference>
     <ManagementPackReference Include="Microsoft.SystemCenter.Library">
@@ -80,11 +86,6 @@
     <EmbeddedResource Include="SPCPMQuery.exe">
       <SubType>Content</SubType>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Renci.SshNet.dll">
-      <SubType>Content</SubType>
-    </None>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
 </Project>

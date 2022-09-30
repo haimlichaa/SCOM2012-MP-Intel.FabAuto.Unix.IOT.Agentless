@@ -14,12 +14,12 @@
           <Property ID="LogicalProcessors" Type="int" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
           <Property ID="PhysicalProcessors" Type="int" AutoIncrement="false" Key="false" CaseSensitive="false" MaxLength="256" MinLength="0" Required="false" Scale="0" />
         </ClassType>
-        <ClassType ID="Intel.FabAuto.Unix.Agentless.IOT.Computer.Group" Accessibility="Public" Abstract="false" Base="SC!Microsoft.SystemCenter.ComputerGroup" Hosted="false" Singleton="true" Extension="false" />
+        <ClassType ID="Intel.FabAuto.Unix.Agentless.IOT.Computer.Group" Accessibility="Public" Abstract="false" Base="MSIL!Microsoft.SystemCenter.InstanceGroup" Hosted="false" Singleton="true" Extension="false" />
       </ClassTypes>
       
 
       <RelationshipTypes>
-
+   
       </RelationshipTypes>
     </EntityTypes>
     <SecureReferences>
@@ -1127,7 +1127,7 @@
               <Interval>$Config/Interval$</Interval>
               <SyncTime/>              
               <TargetSystem>$Config/ComputerName$</TargetSystem>
-              <SSHCommand>sudo /bin/sh -c '/usr/bin/tail -n $Config/TailLastNLines$ "$Config/LogFile$" |sed -n "/$(date --date="$Config/SearchRangeInMinutes$ minutes ago" "+$Config/TimeStampDateFormat$")/,\$p" |grep -ci "$Config/Regex$"|tee /tmp/out'</SSHCommand>
+              <SSHCommand>sudo /bin/sh -c '/usr/bin/tail -n $Config/TailLastNLines$ "$Config/LogFile$" |sed -n "/$(date --date="$Config/SearchRangeInMinutes$ minutes ago" "+$Config/TimeStampDateFormat$")/,\$p" |grep -ci "$Config/Regex$"'</SSHCommand>
               <Port>22</Port>
               <Timeout>$Config/TimerWaitInSeconds$</Timeout>
               <UserName>$Config/UserName$</UserName>
@@ -1360,7 +1360,7 @@ LogWrite "Discovery script completed."
           <MembershipRules>
             <MembershipRule>
               <MonitoringClass>$MPElement[Name="Intel.FabAuto.Unix.Agentless.IOT.Computer"]$</MonitoringClass>
-              <RelationshipClass>$MPElement[Name="SC!Microsoft.SystemCenter.ComputerGroupContainsComputer"]$</RelationshipClass>
+              <RelationshipClass>$MPElement[Name="MSIL!Microsoft.SystemCenter.InstanceGroupContainsEntities"]$</RelationshipClass>
             </MembershipRule>
           </MembershipRules>
         </DataSource>
