@@ -602,7 +602,7 @@
         <OutputType>System!System.PropertyBagData</OutputType>
         <InputType>System!System.BaseData</InputType>
       </ProbeActionModuleType>
-      <WriteActionModuleType ID="Intel.Linux.Ubuntu.IoT.Agentless.CustomSSHCommand.WriteAction" Accessibility="Public">
+      <!--<WriteActionModuleType ID="Intel.Linux.Ubuntu.IoT.Agentless.CustomSSHCommand.WriteAction" Accessibility="Public">
         <Configuration>
           <xsd:element name="Computer" type="xsd:string" />
           <xsd:element name="Command" type="xsd:string" minOccurs="0" />
@@ -709,7 +709,7 @@
         </ModuleImplementation>
         <OutputType>System!System.BaseData</OutputType>
         <InputType>System!System.BaseData</InputType>
-      </WriteActionModuleType>
+      </WriteActionModuleType>-->
       <WriteActionModuleType ID="Intel.Linux.Ubuntu.IoT.Agentless.SPCPMQuery.WriteAction" Accessibility="Public">
         <Configuration>
           <xsd:element name="Host" type="xsd:string" />
@@ -1127,7 +1127,7 @@
               <Interval>$Config/Interval$</Interval>
               <SyncTime/>              
               <TargetSystem>$Config/ComputerName$</TargetSystem>
-              <SSHCommand>sudo /usr/bin/sh -c "/usr/bin/tail -n $Config/TailLastNLines$ '$Config/LogFile$' |sed -n "/$(date --date='$Config/SearchRangeInMinutes$ minutes ago' '+$Config/TimeStampDateFormat$')/,\$p" |grep -ci '$Config/Regex$'</SSHCommand>
+              <SSHCommand>sudo /bin/sh -c '/usr/bin/tail -n $Config/TailLastNLines$ "$Config/LogFile$" |sed -n "/$(date --date="$Config/SearchRangeInMinutes$ minutes ago" "+$Config/TimeStampDateFormat$")/,\$p" |grep -ci "$Config/Regex$"|tee /tmp/out'</SSHCommand>
               <Port>22</Port>
               <Timeout>$Config/TimerWaitInSeconds$</Timeout>
               <UserName>$Config/UserName$</UserName>
@@ -1182,11 +1182,6 @@
             </ConditionDetection>
           </MemberModules>
           <RegularDetections>
-            <RegularDetection MonitorTypeStateID="TimerEventRaised">
-              <Node ID="TimerCondition">
-                <Node ID="DataSource" />
-              </Node>
-            </RegularDetection>
             <RegularDetection MonitorTypeStateID="StatusWarning">
               <Node ID="CDStatusWarning">
                 <Node ID="DataSource" />
@@ -1394,7 +1389,7 @@ LogWrite "Discovery script completed."
       </Rule>
 
     </Rules>
-    <Tasks>
+    <!--<Tasks>
       <Task ID="Intel.FabAuto.Unix.Agentless.test.Task" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" Timeout="300" Remotable="true">
         <Category>Maintenance</Category>
         <WriteAction ID="TestTask" TypeID="Intel.Linux.Ubuntu.IoT.Agentless.CustomSSHCommand.WriteAction">
@@ -1405,7 +1400,7 @@ LogWrite "Discovery script completed."
           <Timeout>30</Timeout>
         </WriteAction>
       </Task>
-    </Tasks>
+    </Tasks>-->
     <Monitors>
       <AggregateMonitor ID="Intel.FabAuto.Custom.Unix.Agentless.Aggregate" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal">
         <Category>Custom</Category>
@@ -1490,7 +1485,7 @@ LogWrite "Discovery script completed."
           <AlertOnState>Error</AlertOnState>
           <AutoResolve>true</AutoResolve>
           <AlertPriority>Normal</AlertPriority>
-          <AlertSeverity>Error</AlertSeverity>
+          <AlertSeverity>Warning</AlertSeverity>
           <AlertParameters>
             <AlertParameter1>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</AlertParameter1>
           </AlertParameters>
@@ -1536,7 +1531,7 @@ LogWrite "Discovery script completed."
           <Port>22</Port>
           <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
           <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
-          <Command>systmctl restart beryl</Command>
+          <Command>sudo systemctl restart beryl</Command>
           <TimeoutSeconds>30</TimeoutSeconds>
         </WriteAction>
       </Recovery>
@@ -1736,9 +1731,9 @@ LogWrite "Discovery script completed."
           <Description>Places GW in MM if Tool is in PM</Description>
         </DisplayString>
 
-        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.test.Task">
+        <!--<DisplayString ElementID="Intel.FabAuto.Unix.Agentless.test.Task">
           <Name>Agentless Test Task</Name>
-        </DisplayString>
+        </DisplayString>-->
         
 
         <DisplayString ElementID="Intel.Linux.Ubuntu.IoT.Agentless.Beryl_Error_Code4.Monitor">
@@ -1770,6 +1765,6 @@ LogWrite "Discovery script completed."
   </LanguagePacks>
   <Resources>
     <DeployableResource ID="Res.Intel.Ubuntu.IoT.Agentless.SPCPMQueryCMD.exe" Accessibility="Internal" FileName="SPCPMQuery.exe" HasNullStream="false" />
-    <DeployableResource ID="Res.Intel.Ubuntu.IoT.Agentless.Renci.SshNet.dll" Accessibility="Internal" FileName="Renci.SshNet.dll" HasNullStream="false" />
+    <!--<DeployableResource ID="Res.Intel.Ubuntu.IoT.Agentless.Renci.SshNet.dll" Accessibility="Internal" FileName="Renci.SshNet.dll" HasNullStream="false" />-->
   </Resources>
 </ManagementPackFragment>

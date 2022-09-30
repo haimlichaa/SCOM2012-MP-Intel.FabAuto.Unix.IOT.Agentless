@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>Intel.FabAuto.Unix.IOT.Agentless</ID>
-      <Version>3.0.0.105</Version>
+      <Version>3.0.0.115</Version>
     </Identity>
     <Name>Unix.IOT.Agentless</Name>
     <References>
@@ -631,114 +631,6 @@
         <OutputType>System!System.PropertyBagData</OutputType>
         <InputType>System!System.BaseData</InputType>
       </ProbeActionModuleType>
-      <WriteActionModuleType ID="Intel.Linux.Ubuntu.IoT.Agentless.CustomSSHCommand.WriteAction" Accessibility="Public">
-        <Configuration>
-          <xsd:element name="Computer" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="Command" type="xsd:string" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="UserName" type="xsd:string" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="Password" type="xsd:string" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-          <xsd:element name="Timeout" type="xsd:int" minOccurs="0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
-        </Configuration>
-        <OverrideableParameters>
-          <OverrideableParameter ID="Computer" ParameterType="string" Selector="$Config/Computer$" />
-          <OverrideableParameter ID="Command" ParameterType="string" Selector="$Config/Command$" />
-          <OverrideableParameter ID="UserName" ParameterType="string" Selector="$Config/UserName$" />
-          <OverrideableParameter ID="Password" ParameterType="string" Selector="$Config/Password$" />
-          <OverrideableParameter ID="Timeout" ParameterType="int" Selector="$Config/Timeout$" />
-        </OverrideableParameters>
-        <ModuleImplementation>
-          <Composite>
-            <MemberModules>
-              <WriteAction ID="CustomSSH" TypeID="Windows!Microsoft.Windows.PowerShellWriteAction">
-                <ScriptName>CustomSSH.ps1</ScriptName>
-                <ScriptBody>
-                  ## Custom SSH Client
-                  ## haim.lichaa@intel.com 2022
-                  ## v1.0 30-Sep-22 Initial
-                  Param ([string]$Computer, [string]$SSHDLL, [string]$Command, [string]$UserName, [string]$Password, $Timeout)
-
-                  $VERSION="v1.0"
-                  $SCRIPT_NAME= 'Intel.IOT.Agentless.CustomSSH.ps1'
-                  $Logfile = "c:\windows\temp\$SCRIPT_NAME.log"
-
-                  #==================================================================================
-                  # Sub:		LogWrite
-                  # Purpose:	Logs to c:\windows\temp if c:\windows\temp\omdebug.txt exists
-                  #==================================================================================
-
-                  Function LogWrite
-                  {
-                  Param ([string]$logstring)
-                  $LogTime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
-                  if (Test-Path $Logfile) {
-                  if ((Get-Item $Logfile).length -gt 1024kb){
-                  Remove-Item $Logfile
-                  }
-                  }
-                  if (Test-Path C:\windows\Temp\omdebug.txt){
-                  $domain=[Environment]::UserDomainName
-                  $user=[Environment]::UserName
-                  if ($Debug -eq 1){
-                  echo  "[$LogTime]  $domain\$user : $logstring"
-                  }
-                  Add-content $Logfile -value "[$LogTime]  $domain\$user : $logstring"
-                  }
-                  }
-
-                  $UserName = $UserName.Split(";")[4].Replace("&amp;lt","")
-                  
-                  LogWrite "Running VERSION $VERSION"
-                  LogWrite "Parameters SSHDLL=[$SSHDLL], Computer=[$Computer], Command=[$Command], UserName=[$UserName], Password=[******]"
-                  [void][reflection.assembly]::LoadFrom( (Resolve-Path $SSHDLL) )
-
-                  $cmd=$Command
-
-                  $client = New-Object Renci.SshNet.SshClient($Computer,$UserName,$Password)
-                  $client.ConnectionInfo.Timeout = New-TimeSpan -Seconds $Timeout
-                  $client.Connect()
-                  $result = $client.RunCommand($cmd)
-                  LogWrite "Result=[$result.Result]"
-                  $result.Result
-
-                  $client.disconnect()
-                </ScriptBody>
-                <Parameters>
-                  <Parameter>
-                    <Name>Computer</Name>
-                    <Value>$Config/Computer$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>SSHDLL</Name>
-                    <Value>$FileResource[Name='Res.Intel.Ubuntu.IoT.Agentless.Renci.SshNet.dll']/Path$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>Command</Name>
-                    <Value>$Config/Command$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>UserName</Name>
-                    <Value>$Config/UserName$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>Password</Name>
-                    <Value>$Config/Password$</Value>
-                  </Parameter>
-                  <Parameter>
-                    <Name>Timeout</Name>
-                    <Value>$Config/Timeout$</Value>
-                  </Parameter>
-                </Parameters>
-                <TimeoutSeconds>$Config/Timeout$</TimeoutSeconds>
-              </WriteAction>
-            </MemberModules>
-            <Composition>
-              <Node ID="CustomSSH" />
-            </Composition>
-          </Composite>
-        </ModuleImplementation>
-        <OutputType>System!System.BaseData</OutputType>
-        <InputType>System!System.BaseData</InputType>
-      </WriteActionModuleType>
       <WriteActionModuleType ID="Intel.Linux.Ubuntu.IoT.Agentless.SPCPMQuery.WriteAction" Accessibility="Public">
         <Configuration>
           <xsd:element name="Host" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
@@ -1155,7 +1047,7 @@
               <Interval>$Config/Interval$</Interval>
               <SyncTime />
               <TargetSystem>$Config/ComputerName$</TargetSystem>
-              <SSHCommand>sudo /usr/bin/sh -c "/usr/bin/tail -n $Config/TailLastNLines$ '$Config/LogFile$' |sed -n "/$(date --date='$Config/SearchRangeInMinutes$ minutes ago' '+$Config/TimeStampDateFormat$')/,\$p" |grep -ci '$Config/Regex$'</SSHCommand>
+              <SSHCommand>sudo /bin/sh -c '/usr/bin/tail -n $Config/TailLastNLines$ "$Config/LogFile$" |sed -n "/$(date --date="$Config/SearchRangeInMinutes$ minutes ago" "+$Config/TimeStampDateFormat$")/,\$p" |grep -ci "$Config/Regex$"|tee /tmp/out'</SSHCommand>
               <Port>22</Port>
               <Timeout>$Config/TimerWaitInSeconds$</Timeout>
               <UserName>$Config/UserName$</UserName>
@@ -1209,11 +1101,6 @@
             </ConditionDetection>
           </MemberModules>
           <RegularDetections>
-            <RegularDetection MonitorTypeStateID="TimerEventRaised">
-              <Node ID="TimerCondition">
-                <Node ID="DataSource" />
-              </Node>
-            </RegularDetection>
             <RegularDetection MonitorTypeStateID="StatusWarning">
               <Node ID="CDStatusWarning">
                 <Node ID="DataSource" />
@@ -1417,18 +1304,6 @@ LogWrite "Discovery script completed."
         </WriteActions>
       </Rule>
     </Rules>
-    <Tasks>
-      <Task ID="Intel.FabAuto.Unix.Agentless.test.Task" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" Timeout="300" Remotable="true">
-        <Category>Maintenance</Category>
-        <WriteAction ID="TestTask" TypeID="Intel.Linux.Ubuntu.IoT.Agentless.CustomSSHCommand.WriteAction">
-          <Computer>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</Computer>
-          <Command>sudo /usr/bin/tail -n 2 /var/log/beryl/log.log </Command>
-          <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
-          <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
-          <Timeout>30</Timeout>
-        </WriteAction>
-      </Task>
-    </Tasks>
     <Monitors>
       <AggregateMonitor ID="Intel.FabAuto.Custom.Unix.Agentless.Aggregate" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal">
         <Category>Custom</Category>
@@ -1512,7 +1387,7 @@ LogWrite "Discovery script completed."
           <AlertOnState>Error</AlertOnState>
           <AutoResolve>true</AutoResolve>
           <AlertPriority>Normal</AlertPriority>
-          <AlertSeverity>Error</AlertSeverity>
+          <AlertSeverity>Warning</AlertSeverity>
           <AlertParameters>
             <AlertParameter1>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</AlertParameter1>
           </AlertParameters>
@@ -1557,7 +1432,7 @@ LogWrite "Discovery script completed."
           <Port>22</Port>
           <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
           <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
-          <Command>systmctl restart beryl</Command>
+          <Command>sudo systemctl restart beryl</Command>
           <TimeoutSeconds>30</TimeoutSeconds>
         </WriteAction>
       </Recovery>
@@ -1737,9 +1612,6 @@ LogWrite "Discovery script completed."
           <Name>SPC TOOL PM Query</Name>
           <Description>Places GW in MM if Tool is in PM</Description>
         </DisplayString>
-        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.test.Task">
-          <Name>Agentless Test Task</Name>
-        </DisplayString>
         <DisplayString ElementID="Intel.Linux.Ubuntu.IoT.Agentless.Beryl_Error_Code4.Monitor">
           <Name>Beryl MQTT Publish Failure</Name>
           <Description>Monitors MQTT publish failures</Description>
@@ -1767,6 +1639,5 @@ LogWrite "Discovery script completed."
   </LanguagePacks>
   <Resources>
     <DeployableResource ID="Res.Intel.Ubuntu.IoT.Agentless.SPCPMQueryCMD.exe" Accessibility="Internal" FileName="SPCPMQuery.exe" HasNullStream="false" />
-    <DeployableResource ID="Res.Intel.Ubuntu.IoT.Agentless.Renci.SshNet.dll" Accessibility="Internal" FileName="Renci.SshNet.dll" HasNullStream="false" />
   </Resources>
 </ManagementPack>
