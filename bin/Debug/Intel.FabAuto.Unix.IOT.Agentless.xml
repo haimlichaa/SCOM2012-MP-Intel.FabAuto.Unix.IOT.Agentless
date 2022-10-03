@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>Intel.FabAuto.Unix.IOT.Agentless</ID>
-      <Version>3.0.0.119</Version>
+      <Version>3.0.0.120</Version>
     </Identity>
     <Name>Unix.IOT.Agentless</Name>
     <References>
@@ -1969,7 +1969,7 @@ LogWrite "Discovery script completed."
           <MaxProcessCount>3</MaxProcessCount>
         </Configuration>
       </UnitMonitor>
-      <UnitMonitor ID="Intel.FabAuto.Unix.Agentless.UFW.Active.Monitor" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Intel.FabAuto.Custom.Unix.Agentless.Aggregate" Remotable="true" Priority="Normal" TypeID="Intel.FabAuto.Unix.IOT.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" ConfirmDelivery="false">
+      <UnitMonitor ID="Intel.FabAuto.Unix.Agentless.UFW.Active.Monitor" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Intel.FabAuto.Unix.IOT.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="Intel.FabAuto.Unix.Agentless.UFW.Active.Monitor.AlertMessage">
           <AlertOnState>Warning</AlertOnState>
@@ -2005,7 +2005,7 @@ LogWrite "Discovery script completed."
                 <XPathQuery>//stdout</XPathQuery>
               </ValueExpression>
               <Operator>DoesNotMatchRegularExpression</Operator>
-              <Pattern>Status: inactive</Pattern>
+              <Pattern>Status: active</Pattern>
             </RegExExpression>
           </ErrorExpression>
           <SuccessExpression>
@@ -2055,7 +2055,7 @@ LogWrite "Discovery script completed."
                 <XPathQuery>//stdout</XPathQuery>
               </ValueExpression>
               <Operator>DoesNotMatchRegularExpression</Operator>
-              <Pattern>disabled</Pattern>
+              <Pattern>enabled</Pattern>
             </RegExExpression>
           </ErrorExpression>
           <SuccessExpression>
