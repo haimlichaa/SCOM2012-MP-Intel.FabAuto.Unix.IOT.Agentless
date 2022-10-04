@@ -1642,7 +1642,7 @@
                     <XPathQuery>//stdout</XPathQuery>
                   </ValueExpression>
                   <Operator>DoesNotMatchRegularExpression</Operator>
-                  <Pattern>.*</Pattern>
+                  <Pattern>.*%.*</Pattern>
                 </RegExExpression>
                </Expression>
             </ConditionDetection>
@@ -2115,7 +2115,7 @@ LogWrite "Discovery script completed."
           <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
           <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
           <MinProcessCount>0</MinProcessCount>
-          <MaxProcessCount>750</MaxProcessCount>
+          <MaxProcessCount>1000</MaxProcessCount>
         </Configuration>
       </UnitMonitor>
 
