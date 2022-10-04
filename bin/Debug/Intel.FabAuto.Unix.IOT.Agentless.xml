@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>Intel.FabAuto.Unix.IOT.Agentless</ID>
-      <Version>3.0.0.120</Version>
+      <Version>3.0.0.121</Version>
     </Identity>
     <Name>Unix.IOT.Agentless</Name>
     <References>
@@ -817,6 +817,136 @@
         <OutputType>System!System.BaseData</OutputType>
         <InputType>System!System.BaseData</InputType>
       </WriteActionModuleType>
+      <WriteActionModuleType ID="Intel.FabAuto.Unix.Agentless.Delete.WriteActionModuleType" Accessibility="Internal" Batching="false">
+        <Configuration>
+          <xsd:element minOccurs="1" name="TimeoutSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element minOccurs="1" name="displayName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element minOccurs="1" name="ManagementServerName" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="TimeoutSeconds" Selector="$Config/TimeoutSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="ManagementServerName" Selector="$Config/ManagementServerName$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation Isolation="Any">
+          <Composite>
+            <MemberModules>
+              <WriteAction ID="RunRemoteUninstallManagementServerAgentlessPowershellScript" TypeID="Windows!Microsoft.Windows.PowerShellWriteAction">
+                <ScriptName>Intel.FabAuto.Ubuntu.Agentless.delete.Gateway.ps1</ScriptName>
+                <ScriptBody>
+                  #*********************************************************************
+                  #   Purpose: Delete a Agentless IOT Device
+                  #       10/01/2022 - Haim Lichaa  - Initial
+                  ##  Parameters: DisplayName,MgmtserverName
+                  #
+                  #   Example usage: Powershell .\Script.ps1 "DisaplayName" "localhost"
+                  #*********************************************************************
+                  param($displayName,$managementServerName)
+                  $VERSION="1.0"
+
+
+                  $Debug = 1
+
+
+                  #==================================================================================
+                  # Sub:		LogWrite
+                  # Purpose:	Logs to c:\windows\temp if c:\windows\temp\omdebug.txt exists
+                  #==================================================================================
+
+                  Function LogWrite
+                  {
+                  Param ([string]$logstring)
+                  $LogTime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
+                  if (Test-Path $Logfile) {
+                  if ((Get-Item $Logfile).length -gt 1024kb){
+                  Remove-Item $Logfile
+                  }
+                  }
+                  if (Test-Path C:\windows\Temp\omdebug.txt){
+                  $domain=[Environment]::UserDomainName
+                  $user=[Environment]::UserName
+                  if ($Debug -eq 1){
+                  Write-Host  "[$LogTime]  $domain\$user : $logstring"
+                  }
+                  Add-content $Logfile -value "[$LogTime]  $domain\$user : $logstring"
+                  }
+                  }
+
+
+                  ## VERY Important.  Need to set PSModule path So we can import.
+                  #The script will fail without this.
+                  #Get the current module path
+                  $p = [Environment]::GetEnvironmentVariable(“PSModulePath”)
+
+                  #Add to the existing path the additional path to our module
+                  $setupKey = Get-Item -Path "HKLM:\Software\Microsoft\Microsoft Operations Manager\3.0\Setup";
+                  $installDirectory = $setupKey.GetValue("InstallDirectory") | Split-Path
+                  $psmPath = $installdirectory + '\Powershell\OperationsManager\OperationsManager.psm1'
+                  try {
+                  Import-Module $psmPath
+                  }
+                  catch [Exception] {
+                  LogWrite "1. Import-Module Exception: ",$_.Exception.Message
+                  exit 1
+                  }
+
+                  $SCRIPT_NAME			= 'Intel.FabAuto.Unix.Agentless.delete.gateway.ps1'
+                  $Logfile = "c:\windows\temp\$SCRIPT_NAME.log"
+
+
+                  LogWrite "Script v$VERSION"
+                  LogWrite "Arguments: $displayName"
+
+                  try {
+                  New-SCOMManagementGroupConnection -ComputerName $managementServerName
+                  $mg = Get-SCOMManagementGroup
+                  $ClassInstanceDisplayName=$displayName
+
+                  $Class=Get-SCOMClass -Name Intel.FabAuto.Unix.Agentless.IOT.Computer
+
+                  ##============== remove a class instance
+
+                  ## get the class instance to remove
+
+                  $ClassInstance=Get-SCOMMonitoringObject -Class $Class|where { $_.DisplayName -eq $ClassInstanceDisplayName}
+
+                  # add the class instance to delete
+
+                  $discovery=New-Object Microsoft.EnterpriseManagement.ConnectorFramework.IncrementalDiscoveryData
+
+                  $discovery.RemoveInternal($ClassInstance,$ClassInstance.GetClasses()[0])
+
+                  ## execute the delete
+
+                  $discovery.Commit($mg)
+
+                  LogWrite "Removal of lorasensor $displayName  completed."
+                  }
+                  catch{
+                  LogWrite "Import-Module Exception: ",$_.Exception.Message
+                  exit 1
+                  }
+                </ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>displayName</Name>
+                    <Value>$Config/displayName$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>managementServerName</Name>
+                    <Value>$Config/ManagementServerName$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+                <StrictErrorHandling>true</StrictErrorHandling>
+              </WriteAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="RunRemoteUninstallManagementServerAgentlessPowershellScript" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <InputType>System!System.BaseData</InputType>
+      </WriteActionModuleType>
     </ModuleTypes>
     <MonitorTypes>
       <UnitMonitorType ID="Intel.FabAuto.Unix.IOT.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" Accessibility="Public">
@@ -1446,7 +1576,7 @@
           <DiscoveryClass TypeID="Intel.FabAuto.Unix.Agentless.IOT.Computer"></DiscoveryClass>
         </DiscoveryTypes>
         <DataSource ID="DS" TypeID="System!System.CommandExecuterDiscoveryDataSource">
-          <IntervalSeconds>7200</IntervalSeconds>
+          <IntervalSeconds>14400</IntervalSeconds>
           <ApplicationName>%windir%\system32\windowspowershell\v1.0\powershell.exe</ApplicationName>
           <WorkingDirectory>C:\</WorkingDirectory>
           <CommandLine>". '$file/Intel.FabAuto.Unix.Agentless.IOT.Computer.Discovery.ps1$' '$MPElement$' '$Target/Id$'"</CommandLine>
@@ -1633,6 +1763,14 @@ LogWrite "Discovery script completed."
           <TimeoutSeconds>30</TimeoutSeconds>
         </WriteAction>
       </Task>
+      <Task ID="Intel.FabAuto.Unix.Agentless.Delete.Task" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" Timeout="300" Remotable="true">
+        <Category>Maintenance</Category>
+        <WriteAction ID="RemoveLoraSensorWriteAction" TypeID="Intel.FabAuto.Unix.Agentless.Delete.WriteActionModuleType">
+          <TimeoutSeconds>90</TimeoutSeconds>
+          <displayName>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</displayName>
+          <ManagementServerName />
+        </WriteAction>
+      </Task>
     </Tasks>
     <Monitors>
       <AggregateMonitor ID="Intel.FabAuto.Custom.Unix.Agentless.Aggregate" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal">
@@ -1720,7 +1858,7 @@ LogWrite "Discovery script completed."
           <AlertSeverity>Warning</AlertSeverity>
           <AlertParameters>
             <AlertParameter1>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/HostName$</AlertParameter1>
-            <AlertParameter2>$Data/Context/Value$</AlertParameter2>
+            <AlertParameter2>$Data/Context///stdout$</AlertParameter2>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
@@ -1752,7 +1890,7 @@ LogWrite "Discovery script completed."
           <AlertSeverity>Warning</AlertSeverity>
           <AlertParameters>
             <AlertParameter1>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/HostName$</AlertParameter1>
-            <AlertParameter2>$Data/Context/Value$</AlertParameter2>
+            <AlertParameter2>$Data/Context///stdout$</AlertParameter2>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
@@ -1784,7 +1922,7 @@ LogWrite "Discovery script completed."
           <AlertSeverity>Warning</AlertSeverity>
           <AlertParameters>
             <AlertParameter1>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/HostName$</AlertParameter1>
-            <AlertParameter2>$Data/Context/Value$</AlertParameter2>
+            <AlertParameter2>$Data/Context///stdout$</AlertParameter2>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
@@ -1816,7 +1954,7 @@ LogWrite "Discovery script completed."
           <AlertSeverity>Warning</AlertSeverity>
           <AlertParameters>
             <AlertParameter1>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/HostName$</AlertParameter1>
-            <AlertParameter2>$Data/Context/Value$</AlertParameter2>
+            <AlertParameter2>$Data/Context///stdout$</AlertParameter2>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
@@ -2384,7 +2522,10 @@ LogWrite "Discovery script completed."
           <Description>Places GW in MM if Tool is in PM</Description>
         </DisplayString>
         <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.Uptime.Task">
-          <Name>Agentless Uptime Task</Name>
+          <Name>Get Uptime</Name>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.Delete.Task">
+          <Name>Delete Device</Name>
         </DisplayString>
         <DisplayString ElementID="Intel.Linux.Ubuntu.IoT.Agentless.Beryl_Error_Code4.Monitor">
           <Name>Beryl MQTT Publish Failure</Name>
