@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>Intel.FabAuto.Unix.IOT.Agentless</ID>
-      <Version>3.0.0.125</Version>
+      <Version>3.0.0.126</Version>
     </Identity>
     <Name>Unix.IOT.Agentless</Name>
     <References>
@@ -1604,7 +1604,7 @@
                     <XPathQuery>//stdout</XPathQuery>
                   </ValueExpression>
                   <Operator>DoesNotMatchRegularExpression</Operator>
-                  <Pattern>.*</Pattern>
+                  <Pattern>.*%.*</Pattern>
                 </RegExExpression>
               </Expression>
             </ConditionDetection>
@@ -2390,11 +2390,11 @@ LogWrite "Discovery script completed."
         <Configuration>
           <Interval>1800</Interval>
           <TargetSystem>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</TargetSystem>
-          <ExcludeDisksPattern>/boot|/tmp|/mnt|/dev|/run</ExcludeDisksPattern>
+          <ExcludeDisksPattern>Filesystem|tmpfs|/tmp|/mnt|/dev|/run</ExcludeDisksPattern>
           <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
           <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
           <ErrorPercentDiskUtil>90</ErrorPercentDiskUtil>
-          <ErrorFreeMB>150</ErrorFreeMB>
+          <ErrorFreeMB>100</ErrorFreeMB>
         </Configuration>
       </UnitMonitor>
     </Monitors>

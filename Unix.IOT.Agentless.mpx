@@ -1572,7 +1572,7 @@
                     <XPathQuery>//stdout</XPathQuery>
                   </ValueExpression>
                   <Operator>DoesNotMatchRegularExpression</Operator>
-                  <Pattern>.*</Pattern>
+                  <Pattern>.*%.*</Pattern>
                 </RegExExpression>
               </Expression>
             </ConditionDetection>

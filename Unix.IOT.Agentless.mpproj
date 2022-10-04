@@ -6,7 +6,7 @@
     <RootNamespace>Intel.FabAuto.Unix.IOT.Agentless</RootNamespace>
     <Name>Unix.IOT.Agentless</Name>
     <ManagementPackName>Intel.FabAuto.Unix.IOT.Agentless</ManagementPackName>
-    <Version>3.0.0.125</Version>
+    <Version>3.0.0.126</Version>
     <MpFrameworkVersion>v7.0.1</MpFrameworkVersion>
     <MpFrameworkProfile>OM</MpFrameworkProfile>
     <ProductVersion>1.1.0.0</ProductVersion>
