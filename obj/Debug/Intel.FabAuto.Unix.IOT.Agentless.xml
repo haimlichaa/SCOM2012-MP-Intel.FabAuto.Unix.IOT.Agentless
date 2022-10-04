@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>Intel.FabAuto.Unix.IOT.Agentless</ID>
-      <Version>3.0.0.121</Version>
+      <Version>3.0.0.125</Version>
     </Identity>
     <Name>Unix.IOT.Agentless</Name>
     <References>
@@ -919,7 +919,7 @@
 
                   $discovery.Commit($mg)
 
-                  LogWrite "Removal of lorasensor $displayName  completed."
+                  LogWrite "Removal of $displayName  completed."
                   }
                   catch{
                   LogWrite "Import-Module Exception: ",$_.Exception.Message
@@ -1559,6 +1559,144 @@
               </Node>
             </RegularDetection>
             <RegularDetection MonitorTypeStateID="ProcessCountError">
+              <Node ID="CDProcessCountError">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+      <UnitMonitorType ID="Intel.Linux.Ubuntu.Iot.Agentless.Disk.Utilization.TwoState.MonitorType" Accessibility="Public">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="DiskUtilOK" NoDetection="false" />
+          <MonitorTypeState ID="DiskUtilError" NoDetection="false" />
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="Interval" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TargetSystem" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ExcludeDisksPattern" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="UserName" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Password" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ErrorPercentDiskUtil" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="Interval" Selector="$Config/Interval$" ParameterType="int" />
+          <OverrideableParameter ID="ExcludeDisksPattern" Selector="$Config/ExcludeDisksPattern$" ParameterType="string" />
+          <OverrideableParameter ID="ErrorPercentDiskUtil" Selector="$Config/ErrorPercentDiskUtil$" ParameterType="int" />
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="DS" TypeID="Intel.FabAuto.Unix.Agentless.IOT.TimedSSHCommand.DataSource">
+              <Interval>$Config/Interval$</Interval>
+              <SyncTime />
+              <TargetSystem>$Config/TargetSystem$</TargetSystem>
+              <SSHCommand>df -Pm | awk '+$5&gt;=$Config/ErrorPercentDiskUtil$' |grep -vE '$Config/ExcludeDisksPattern$'</SSHCommand>
+              <Port>22</Port>
+              <Timeout>20</Timeout>
+              <UserName>$Config/UserName$</UserName>
+              <Password>$Config/Password$</Password>
+              <FilterExpression />
+            </DataSource>
+            <ConditionDetection ID="CDProcessCountOK" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <RegExExpression>
+                  <ValueExpression>
+                    <XPathQuery>//stdout</XPathQuery>
+                  </ValueExpression>
+                  <Operator>DoesNotMatchRegularExpression</Operator>
+                  <Pattern>.*</Pattern>
+                </RegExExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="CDProcessCountError" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <RegExExpression>
+                  <ValueExpression>
+                    <XPathQuery>//stdout</XPathQuery>
+                  </ValueExpression>
+                  <Operator>MatchesRegularExpression</Operator>
+                  <Pattern>.*%.*</Pattern>
+                </RegExExpression>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="DiskUtilOK">
+              <Node ID="CDProcessCountOK">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="DiskUtilError">
+              <Node ID="CDProcessCountError">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+      <UnitMonitorType ID="Intel.Linux.Ubuntu.Iot.Agentless.Disks.Utilization.TwoState.MonitorType" Accessibility="Public">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="DiskUtilOK" NoDetection="false" />
+          <MonitorTypeState ID="DiskUtilError" NoDetection="false" />
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="Interval" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="TargetSystem" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ExcludeDisksPattern" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="UserName" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Password" type="xsd:string" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ErrorPercentDiskUtil" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="ErrorFreeMB" type="xsd:integer" minOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="Interval" Selector="$Config/Interval$" ParameterType="int" />
+          <OverrideableParameter ID="ExcludeDisksPattern" Selector="$Config/ExcludeDisksPattern$" ParameterType="string" />
+          <OverrideableParameter ID="ErrorPercentDiskUtil" Selector="$Config/ErrorPercentDiskUtil$" ParameterType="int" />
+          <OverrideableParameter ID="ErrorFreeMB" Selector="$Config/ErrorFreeMB$" ParameterType="int" />
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="DS" TypeID="Intel.FabAuto.Unix.Agentless.IOT.TimedSSHCommand.DataSource">
+              <Interval>$Config/Interval$</Interval>
+              <SyncTime />
+              <TargetSystem>$Config/TargetSystem$</TargetSystem>
+              <SSHCommand>df -Pm | awk '+$5&gt;=$Config/ErrorPercentDiskUtil$ || +$4&lt;= $Config/ErrorFreeMB$' |grep -vE '$Config/ExcludeDisksPattern$'</SSHCommand>
+              <Port>22</Port>
+              <Timeout>20</Timeout>
+              <UserName>$Config/UserName$</UserName>
+              <Password>$Config/Password$</Password>
+              <FilterExpression />
+            </DataSource>
+            <ConditionDetection ID="CDProcessCountOK" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <RegExExpression>
+                  <ValueExpression>
+                    <XPathQuery>//stdout</XPathQuery>
+                  </ValueExpression>
+                  <Operator>DoesNotMatchRegularExpression</Operator>
+                  <Pattern>.*</Pattern>
+                </RegExExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="CDProcessCountError" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <RegExExpression>
+                  <ValueExpression>
+                    <XPathQuery>//stdout</XPathQuery>
+                  </ValueExpression>
+                  <Operator>MatchesRegularExpression</Operator>
+                  <Pattern>.*%.*</Pattern>
+                </RegExExpression>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="DiskUtilOK">
+              <Node ID="CDProcessCountOK">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="DiskUtilError">
               <Node ID="CDProcessCountError">
                 <Node ID="DS" />
               </Node>
@@ -2233,6 +2371,32 @@ LogWrite "Discovery script completed."
           <MaxPMem>90</MaxPMem>
         </Configuration>
       </UnitMonitor>
+      <UnitMonitor ID="Intel.Linux.Ubuntu.Iot.Agentless.Disks.Utilization.TwoState.Monitor" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Intel.Linux.Ubuntu.Iot.Agentless.Disks.Utilization.TwoState.MonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="Intel.Linux.Ubuntu.Iot.Agentless.Disks.Utilization.TwoState.Monitor.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>Error</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</AlertParameter1>
+            <AlertParameter2>$Data/Context///stdout$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="DiskUtilOK" HealthState="Success" />
+          <OperationalState ID="UnHealthy" MonitorTypeStateID="DiskUtilError" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <Interval>1800</Interval>
+          <TargetSystem>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</TargetSystem>
+          <ExcludeDisksPattern>/boot|/tmp|/mnt|/dev|/run</ExcludeDisksPattern>
+          <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
+          <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
+          <ErrorPercentDiskUtil>90</ErrorPercentDiskUtil>
+          <ErrorFreeMB>150</ErrorFreeMB>
+        </Configuration>
+      </UnitMonitor>
     </Monitors>
     <Recoveries>
       <Recovery ID="Intel.IOT.FabAuto.Custom.GetAgentlessAlive.Unix.Monitor.SPCPMQuery.Warning.Recovery" Accessibility="Public" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" Monitor="Intel.IOT.FabAuto.Custom.GetAgentlessAlive.Unix.Monitor" ResetMonitor="true" ExecuteOnState="Warning" Remotable="true" Timeout="300">
@@ -2441,6 +2605,7 @@ LogWrite "Discovery script completed."
       <StringResource ID="Intel.FabAuto.Unix.Agentless.UFW.Active.Monitor.AlertMessage" />
       <StringResource ID="Intel.FabAuto.Unix.Agentless.SecureBoot.Enabled.Monitor.AlertMessage" />
       <StringResource ID="Intel.Linux.Ubuntu.Iot.Agentless.Beryl.Process.Memory.Utilization.TwoState.Monitor.AlertMessage" />
+      <StringResource ID="Intel.Linux.Ubuntu.Iot.Agentless.Disks.Utilization.TwoState.Monitor.AlertMessage" />
     </StringResources>
   </Presentation>
   <LanguagePacks>
@@ -2622,6 +2787,16 @@ LogWrite "Discovery script completed."
         <DisplayString ElementID="Intel.Linux.Ubuntu.Iot.Agentless.Beryl.Process.Memory.Utilization.TwoState.Monitor.AlertMessage">
           <Name>Beryl Process Memory Alert</Name>
           <Description>Beryl process memory</Description>
+        </DisplayString>
+        <DisplayString ElementID="Intel.Linux.Ubuntu.Iot.Agentless.Disks.Utilization.TwoState.Monitor">
+          <Name>% Disk Space Utilization</Name>
+          <Description>Monitors % Disk space Over utilization</Description>
+        </DisplayString>
+        <DisplayString ElementID="Intel.Linux.Ubuntu.Iot.Agentless.Disks.Utilization.TwoState.Monitor.AlertMessage">
+          <Name>% Disk Space Utilization Alert</Name>
+          <Description>Disk space on {0} Has reached threshold limit: 
+          {1}
+           </Description>
         </DisplayString>
       </DisplayStrings>
       <KnowledgeArticles>
