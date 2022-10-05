@@ -2379,7 +2379,109 @@ LogWrite "Discovery script completed."
           <ErrorFreeMB>100</ErrorFreeMB>
         </Configuration>
       </UnitMonitor>
-      
+ 
+      <UnitMonitor ID="Intel.FabAuto.Unix.Agentless.dnsupdate.refused.Monitor" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Intel.FabAuto.Unix.IOT.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="Intel.FabAuto.Unix.Agentless.dnsupdate.refused.Monitor.AlertMessage">
+          <AlertOnState>Warning</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>Warning</AlertSeverity>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="StatusOK" HealthState="Success" />
+          <OperationalState ID="UnHealthy" MonitorTypeStateID="StatusError" HealthState="Warning" />
+        </OperationalStates>
+        <Configuration>
+          <Interval>30000</Interval>
+          <SyncTime />
+          <TargetSystem>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</TargetSystem>
+          <SSHCommand>sudo /usr/local/bin/dnsupdate -v 2&gt;&amp;1|grep refused</SSHCommand>
+          <Port>22</Port>
+          <Timeout>60</Timeout>
+          <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
+          <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
+          <FilterExpression>
+            <RegExExpression>
+              <ValueExpression>
+                <XPathQuery>//stdout</XPathQuery>
+              </ValueExpression>
+              <Operator>MatchesRegularExpression</Operator>
+              <Pattern>.*</Pattern>
+            </RegExExpression>
+          </FilterExpression>
+          <ErrorExpression>
+            <RegExExpression>
+              <ValueExpression>
+                <XPathQuery>//stdout</XPathQuery>
+              </ValueExpression>
+              <Operator>MatchesRegularExpression</Operator>
+              <Pattern>.*refused.*</Pattern>
+            </RegExExpression>
+          </ErrorExpression>
+          <SuccessExpression>
+            <RegExExpression>
+              <ValueExpression>
+                <XPathQuery>//stdout</XPathQuery>
+              </ValueExpression>
+              <Operator>DoesNotMatchRegularExpression</Operator>
+              <Pattern>.refused.*</Pattern>
+            </RegExExpression>
+          </SuccessExpression>
+        </Configuration>
+      </UnitMonitor>
+
+      <UnitMonitor ID="Intel.FabAuto.Unix.Agentless.dnsupdate.hostnamemismatch.Monitor" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Intel.FabAuto.Unix.IOT.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="Intel.FabAuto.Unix.Agentless.dnsupdate.hostnamemismatch.Monitor.AlertMessage">
+          <AlertOnState>Warning</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>Warning</AlertSeverity>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Healthy" MonitorTypeStateID="StatusOK" HealthState="Success" />
+          <OperationalState ID="UnHealthy" MonitorTypeStateID="StatusError" HealthState="Warning" />
+        </OperationalStates>
+        <Configuration>
+          <Interval>30000</Interval>
+          <SyncTime />
+          <TargetSystem>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</TargetSystem>
+          <SSHCommand>sudo /usr/local/bin/dnsupdate -v 2&gt;&amp;1|grep "attempting unsecure update "|grep  $Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/HostName$</SSHCommand>
+          <Port>22</Port>
+          <Timeout>60</Timeout>
+          <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
+          <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
+          <FilterExpression>
+            <RegExExpression>
+              <ValueExpression>
+                <XPathQuery>//stdout</XPathQuery>
+              </ValueExpression>
+              <Operator>MatchesRegularExpression</Operator>
+              <Pattern>.*</Pattern>
+            </RegExExpression>
+          </FilterExpression>
+          <ErrorExpression>
+            <RegExExpression>
+              <ValueExpression>
+                <XPathQuery>//stdout</XPathQuery>
+              </ValueExpression>
+              <Operator>DoesNotMatchRegularExpression</Operator>
+              <Pattern>.*$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$.*</Pattern>
+            </RegExExpression>
+          </ErrorExpression>
+          <SuccessExpression>
+            <RegExExpression>
+              <ValueExpression>
+                <XPathQuery>//stdout</XPathQuery>
+              </ValueExpression>
+              <Operator>MatchesRegularExpression</Operator>
+              <Pattern>.$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$.*</Pattern>
+            </RegExExpression>
+          </SuccessExpression>
+        </Configuration>
+      </UnitMonitor>
+
     </Monitors>
     <Recoveries>
       <Recovery ID="Intel.IOT.FabAuto.Custom.GetAgentlessAlive.Unix.Monitor.SPCPMQuery.Warning.Recovery" Accessibility="Public" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" Monitor="Intel.IOT.FabAuto.Custom.GetAgentlessAlive.Unix.Monitor" ResetMonitor="true" ExecuteOnState="Warning" Remotable="true" Timeout="300">
@@ -2478,6 +2580,18 @@ LogWrite "Discovery script completed."
           <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
           <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
           <Command>sudo ufw --force enable</Command>
+          <TimeoutSeconds>30</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+
+      <Recovery ID="Intel.FabAuto.Unix.Agentless.dnsupdate.hostnamemismatch.Monitor.Recovery" Accessibility="Public" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" Monitor="Intel.FabAuto.Unix.Agentless.dnsupdate.hostnamemismatch.Monitor" ResetMonitor="true" ExecuteOnState="Warning" Remotable="true" Timeout="300">
+        <Category>Custom</Category>
+        <WriteAction ID="recover" TypeID="Unix!Microsoft.Unix.SSHCommand.WriteAction">
+          <Host>$Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$</Host>
+          <Port>22</Port>
+          <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
+          <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
+          <Command>sudo /bin/bash -c 'bash -c ". /usr/local/bin/iotlib;cd /tmp;ftpit get keytabs.tgz download/ &amp;&amp; tar xvf keytabs.tgz  &amp;&amp; mv etc/opt/quest/vas/keytabs/* /etc/opt/quest/vas/keytabs/;rm -rf /tmp/etc/opt;rm -f /tmp/keytabs.tgz";changeHostname.sh -f $Target/Property[Type="Intel.FabAuto.Unix.Agentless.IOT.Computer"]/PrincipalName$'</Command>
           <TimeoutSeconds>30</TimeoutSeconds>
         </WriteAction>
       </Recovery>
@@ -2598,6 +2712,8 @@ LogWrite "Discovery script completed."
       <StringResource ID="Intel.FabAuto.Unix.Agentless.SecureBoot.Enabled.Monitor.AlertMessage" />
       <StringResource ID="Intel.Linux.Ubuntu.Iot.Agentless.Beryl.Process.Memory.Utilization.TwoState.Monitor.AlertMessage" />
       <StringResource ID="Intel.Linux.Ubuntu.Iot.Agentless.Disks.Utilization.TwoState.Monitor.AlertMessage" />
+      <StringResource ID="Intel.FabAuto.Unix.Agentless.dnsupdate.hostnamemismatch.Monitor.AlertMessage" />
+      <StringResource ID="Intel.FabAuto.Unix.Agentless.dnsupdate.refused.Monitor.AlertMessage" />
     </StringResources>
   </Presentation>
   <LanguagePacks>
@@ -2743,7 +2859,7 @@ LogWrite "Discovery script completed."
         </DisplayString>
         <DisplayString ElementID="Intel.Linux.Ubuntu.Iot.Agentless.Beryl.ProcessTCPCount.TwoState.Monitor.AlertMessage">
           <Name>beryl_daemon has too many TCP connections Monitor Alert</Name>
-          <Description>beryl_daemon.py has {0} connections open</Description>
+          <Description>beryl_daemon.py on {0} has {1} connections open</Description>
         </DisplayString>
 
 
@@ -2827,7 +2943,33 @@ LogWrite "Discovery script completed."
           {1}
            </Description>
         </DisplayString>
-        
+
+
+
+
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.dnsupdate.refused.Monitor">
+          <Name>DNS Update Failing</Name>
+          <Description>Monitors the DNS update</Description>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.dnsupdate.refused.Monitor.AlertMessage">
+          <Name>DNS update failing Alert</Name>
+          <Description>
+            DNS update is failing due to refusal by DNS to update.
+          </Description>
+        </DisplayString>
+
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.dnsupdate.hostnamemismatch.Monitor">
+          <Name>Hostname Mismatch DNS Name</Name>
+          <Description>Monitors hostname and DNS Name</Description>
+        </DisplayString>
+        <DisplayString ElementID="Intel.FabAuto.Unix.Agentless.dnsupdate.hostnamemismatch.Monitor.AlertMessage">
+          <Name>Hostname mismatch with DNS Alert</Name>
+          <Description>
+            The Hostname is different then the configured DNS Name.
+          </Description>
+        </DisplayString>
+
+
 
       </DisplayStrings>
 
