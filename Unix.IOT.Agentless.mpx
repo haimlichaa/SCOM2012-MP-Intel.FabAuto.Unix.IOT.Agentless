@@ -1902,7 +1902,7 @@ LogWrite "Discovery script completed."
         </OperationalStates>
         <Configuration>
           <ComputerName>$Target/Property[Type="System!System.Entity"]/DisplayName$</ComputerName>
-          <IntervalSeconds>1000</IntervalSeconds>
+          <IntervalSeconds>1800</IntervalSeconds>
           <TimeoutSeconds>300</TimeoutSeconds>
           <MaxMissingHeartbeats>14</MaxMissingHeartbeats>
           <EventLookBackMin>-60</EventLookBackMin>
@@ -2275,7 +2275,7 @@ LogWrite "Discovery script completed."
         </Configuration>
       </UnitMonitor>
 
-      <UnitMonitor ID="Intel.FabAuto.Unix.Agentless.SecureBoot.Enabled.Monitor" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Intel.FabAuto.Custom.Unix.Agentless.Aggregate" Remotable="true" Priority="Normal" TypeID="Intel.FabAuto.Unix.IOT.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" ConfirmDelivery="false">
+      <UnitMonitor ID="Intel.FabAuto.Unix.Agentless.SecureBoot.Enabled.Monitor" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Intel.FabAuto.Unix.IOT.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="Intel.FabAuto.Unix.Agentless.SecureBoot.Enabled.Monitor.AlertMessage">
           <AlertOnState>Warning</AlertOnState>

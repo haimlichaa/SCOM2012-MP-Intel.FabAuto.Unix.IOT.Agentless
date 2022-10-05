@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>Intel.FabAuto.Unix.IOT.Agentless</ID>
-      <Version>3.0.0.127</Version>
+      <Version>3.0.0.129</Version>
     </Identity>
     <Name>Unix.IOT.Agentless</Name>
     <References>
@@ -1930,7 +1930,7 @@ LogWrite "Discovery script completed."
         </OperationalStates>
         <Configuration>
           <ComputerName>$Target/Property[Type="System!System.Entity"]/DisplayName$</ComputerName>
-          <IntervalSeconds>1000</IntervalSeconds>
+          <IntervalSeconds>1800</IntervalSeconds>
           <TimeoutSeconds>300</TimeoutSeconds>
           <MaxMissingHeartbeats>14</MaxMissingHeartbeats>
           <EventLookBackMin>-60</EventLookBackMin>
@@ -2138,7 +2138,7 @@ LogWrite "Discovery script completed."
           <UserName>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/UserName$</UserName>
           <Password>$RunAs[Name="Intel.FabAuto.IoT.Agentless.ActionAccount"]/Password$</Password>
           <MinProcessCount>0</MinProcessCount>
-          <MaxProcessCount>750</MaxProcessCount>
+          <MaxProcessCount>1000</MaxProcessCount>
         </Configuration>
       </UnitMonitor>
       <UnitMonitor ID="Intel.Linux.Ubuntu.Iot.Agentless.Beryl.ProcessCount.TwoState.Monitor" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Intel.Linux.Ubuntu.Iot.Agentless.ProcessCount.TwoState.MonitorType" ConfirmDelivery="false">
@@ -2295,7 +2295,7 @@ LogWrite "Discovery script completed."
           </SuccessExpression>
         </Configuration>
       </UnitMonitor>
-      <UnitMonitor ID="Intel.FabAuto.Unix.Agentless.SecureBoot.Enabled.Monitor" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Intel.FabAuto.Custom.Unix.Agentless.Aggregate" Remotable="true" Priority="Normal" TypeID="Intel.FabAuto.Unix.IOT.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" ConfirmDelivery="false">
+      <UnitMonitor ID="Intel.FabAuto.Unix.Agentless.SecureBoot.Enabled.Monitor" Accessibility="Internal" Enabled="true" Target="Intel.FabAuto.Unix.Agentless.IOT.Computer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Intel.FabAuto.Unix.IOT.Agentless.Server.TimedSSHCommand.Expression.TwoState.MonitorType" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="Intel.FabAuto.Unix.Agentless.SecureBoot.Enabled.Monitor.AlertMessage">
           <AlertOnState>Warning</AlertOnState>
